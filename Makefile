@@ -3,6 +3,7 @@ CFLAGS=-Iinclude -DWINDOWS -DDEBUG -c -Wall -g
 LDFLAGS=-static-libgcc -Llib32 -lmingw32 -mconsole
 SOURCES= \
 src/interface.c \
+src/map.c \
 src/main.c
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=poc.exe

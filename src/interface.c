@@ -3,28 +3,7 @@
 #ifdef WINDOWS
 
 #include <windows.h>
-
-enum Key
-{
-  // Simple keys
-  KEY_SIMPLE_BEGIN = 0,
-
-  KEY_UNKNOWN = 0,
-  KEY_NUMPAD_0, KEY_NUMPAD_1,
-  KEY_NUMPAD_2, KEY_NUMPAD_3,
-  KEY_NUMPAD_4, KEY_NUMPAD_5,
-  KEY_NUMPAD_6, KEY_NUMPAD_7,
-  KEY_NUMPAD_8, KEY_NUMPAD_9,
-
-  KEY_SIMPLE_END,
-  KEY_SIMPLE_MASK = 0x0000ffff,
-  // Flags
-  KEY_SHIFT =       0x00010000,
-  KEY_CONTROL =     0x00020000,
-  KEY_ALT =         0x00040000,
-
-  KEY_FLAG_MASK =   0xffff0000
-};
+#include "map.h"
 
 static HANDLE inputHandle;
 static HANDLE outputHandle;
@@ -33,9 +12,11 @@ static int u = 0;
 
 #define EX  80
 #define WHY 25
-
+#define tableSize 256
+static uint vkToKey[tableSize];
+static uint asciiToKey[tableSize];
 static CHAR_INFO one[EX*WHY];
-static CHAR_INFO two[10*10];
+static CHAR_INFO two[EX*WHY];
 WORD white = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY;
 void iface_init(void) {
 	inputHandle  = GetStdHandle(STD_INPUT_HANDLE);
@@ -57,19 +38,45 @@ void iface_init(void) {
 	}
 	buffers[0] = CreateConsoleScreenBuffer(GENERIC_WRITE, 0, 0, CONSOLE_TEXTMODE_BUFFER, 0);
 	buffers[1] = CreateConsoleScreenBuffer(GENERIC_WRITE, 0, 0, CONSOLE_TEXTMODE_BUFFER, 0);
+
+	for (i = 0; i < tableSize; i++)
+	{
+		vkToKey[i] = KEY_UNKNOWN;
+		asciiToKey[i] = KEY_UNKNOWN;
+	}
+	vkToKey[VK_NUMPAD0] = KEY_NUMPAD_0;
+	vkToKey[VK_NUMPAD1] = KEY_NUMPAD_1;
+	vkToKey[VK_NUMPAD2] = KEY_NUMPAD_2;
+	vkToKey[VK_NUMPAD3] = KEY_NUMPAD_3;
+	vkToKey[VK_NUMPAD4] = KEY_NUMPAD_4;
+	vkToKey[VK_NUMPAD5] = KEY_NUMPAD_5;
+	vkToKey[VK_NUMPAD6] = KEY_NUMPAD_6;
+	vkToKey[VK_NUMPAD7] = KEY_NUMPAD_7;
+	vkToKey[VK_NUMPAD8] = KEY_NUMPAD_8;
+	vkToKey[VK_NUMPAD9] = KEY_NUMPAD_9;
+
 	iface_swap();
 }
 
-void iface_cleanup(void) {}
+void iface_cleanup(void) {SetConsoleActiveScreenBuffer(outputHandle);}
 
-void iface_display() {
-	static int v = 0;
-	COORD bufsize = {EX, WHY};
+#define COORD2INDEX(x, y, xmax) ((x) + (xmax) * (y))
+void iface_drawmap(map_t* m) {
+	CHAR_INFO map[m->size[0]*m->size[1]];
+	CHAR_INFO* c;
+	COORD bufsize = {m->size[0], m->size[1]};//	COORD bufsize = {m->size[0], m->size[1]};
 	COORD source = {0, 0};
-	SMALL_RECT dest = {0, 0, EX-1, WHY-1};
-	WriteConsoleOutput(buffers[u], one, bufsize, source, &dest);
-	if (v) {WriteConsoleOutput(buffers[u], two, bufsize, source, &(SMALL_RECT){5,5, 15, 15});}
-	v++;
+	SMALL_RECT dest = {0, 0, m->size[0]-1, m->size[1]-1};
+	int i, j; tile_t* t;
+	for (i=0; i<m->size[0]; i++) {
+		for (j=0; j<m->size[1]; j++) {
+			t = map_get_tile(m, i, j);
+			c = map + COORD2INDEX(i, j, m->size[0]);
+			c->Char.AsciiChar = t->symbol;
+			c->Attributes	 = t->colour;
+		}
+	}
+	WriteConsoleOutput(buffers[u], map, bufsize, source, &dest);
 }
 
 void iface_swap() {
@@ -88,9 +95,9 @@ uint iface_next_key (void) {
 		CHAR ascii = in.Event.KeyEvent.uChar.AsciiChar;
 		DWORD control = in.Event.KeyEvent.dwControlKeyState;
 		result = vkToKey[vKeycode];
-		if (result == KEY_UNKNOWN) {result = asciiToKey[ascii];}
+		if (result == KEY_UNKNOWN) {result = asciiToKey[(int)ascii];}
 		if (result != KEY_UNKNOWN) {
-			if ((control & CAPSLOCK_ON) || (control & SHIFT_PRESSED))            {result = result | KEY_SHIFT;}
+			if ((control & CAPSLOCK_ON) || (control & SHIFT_PRESSED))			{result = result | KEY_SHIFT;}
 			if ((control & LEFT_CTRL_PRESSED) || (control & RIGHT_CTRL_PRESSED)) {result = result | KEY_CONTROL;}
 			if ((control & LEFT_ALT_PRESSED) || (control & RIGHT_ALT_PRESSED))   {result = result | KEY_ALT;}
 		}

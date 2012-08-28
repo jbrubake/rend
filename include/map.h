@@ -3,13 +3,23 @@
 
 #include "types.h"
 
-#define CLAMP(x, u, v) (x<(u) && x<(v) || x>(u) && x>(v))
 #define BITS(x) (1<<(x))
-#define FLAG_WALKABLE = BITS(1)
+#define TILE_WALKABLE    BITS(0)
+#define TILE_TRANSPARENT BITS(1)
+
+#define COL_BLUE    BITS(0)
+#define COL_GREEN   BITS(1)
+#define COL_RED     BITS(2)
+#define COL_WHITE   COL_BLUE | COL_GREEN | COL_RED
+#define COL_INTENSE BITS(3)
+
+#define COL_FG(x)   (x)
+#define COL_BG(x)   (x<<4)
 
 typedef struct tile_t {
-	uint flags;
-	char symbol;
+	u16 flags;
+	u8 symbol;
+	u8 colour;
 } tile_t;
 
 typedef struct map_t {
@@ -17,9 +27,9 @@ typedef struct map_t {
 	tile_t tiles[0];
 } map_t;
 
-tile_t* map_get_tile(map_t* w, int x, int y) {
-	if (CLAMP(x, 0, w->size[0]) || CLAMP(y, 0, w->size[1])) {return NULL;}
-	return w->tiles[x + w->size[0]*y];
-}
+// Use this when statically allocating space for a map_t
+map_t * map_init (ushort sizex, ushort sizey);
+void    map_clean(map_t *m);
+tile_t* map_get_tile(map_t* w, int x, int y);
 
 #endif
