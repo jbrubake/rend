@@ -7,19 +7,10 @@
 #define TILE_WALKABLE    BITS(0)
 #define TILE_TRANSPARENT BITS(1)
 
-#define COL_BLUE    BITS(0)
-#define COL_GREEN   BITS(1)
-#define COL_RED     BITS(2)
-#define COL_WHITE   COL_BLUE | COL_GREEN | COL_RED
-#define COL_INTENSE BITS(3)
-
-#define COL_FG(x)   (x)
-#define COL_BG(x)   (x<<4)
-
 typedef struct tile_t {
 	u16 flags;
 	u8 symbol;
-	u8 colour;
+	u8 color;
 } tile_t;
 
 typedef struct map_t {

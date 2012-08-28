@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Iinclude -DWINDOWS -DDEBUG -c -Wall -g
-LDFLAGS=-static-libgcc -Llib32 -lmingw32 -mconsole
+LDFLAGS=-static-libgcc -Llib -lpdcurses -lmingw32 -mconsole
 SOURCES= \
 src/interface.c \
 src/map.c \

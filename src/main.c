@@ -2,19 +2,20 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <windows.h>
 #include "interface.h"
 #include "map.h"
 
 int main() {
-	map_t* themap = map_init(80, 25);
+	uint maxx, maxy;
+	getmaxyx(stdscr, maxy, maxx);
+	map_t* themap = map_init(51, 26);
 
 	iface_init();
 	iface_drawmap(themap);
 	iface_swap();
 	while (1) {
-		uint i = iface_next_key();
-		if (i == KEY_NUMPAD_0) {break;}
+		uint c = iface_next_key();
+		if (c == 'q') {break;}
 	}
 	iface_cleanup();
 
