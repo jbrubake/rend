@@ -2,6 +2,7 @@ CC=gcc
 CFLAGS=-Iinclude -DWINDOWS -DDEBUG -c -Wall -g
 LDFLAGS=-static-libgcc -Llib -lpdcurses -lmingw32 -mconsole
 SOURCES= \
+src/game.c \
 src/interface.c \
 src/map.c \
 src/main.c

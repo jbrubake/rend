@@ -1,11 +1,11 @@
 #ifndef _MAP_H_
 #define _MAP_H_
 
-#include "types.h"
+#include "game.h"
 
-#define BITS(x) (1<<(x))
 #define TILE_WALKABLE    BITS(0)
 #define TILE_TRANSPARENT BITS(1)
+#define TILE_VISIBLE     BITS(2)
 
 typedef struct tile_t {
 	u16 flags;

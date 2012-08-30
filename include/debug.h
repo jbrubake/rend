@@ -16,7 +16,7 @@
 #include <stdio.h>
 #define __DEBUG_MSG(tag, ...) \
 { \
-	printf(tag ": %20s:%5d: ", __FILE__, __LINE__); \
+	printf(tag ": %20s() [%s]:%5d: ", __func__, __FILE__, __LINE__); \
 	printf(__VA_ARGS__); \
 	printf("\n"); \
 }

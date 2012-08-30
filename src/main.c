@@ -2,23 +2,11 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "interface.h"
-#include "map.h"
+#include "game.h"
 
 int main() {
-	uint maxx, maxy;
-	getmaxyx(stdscr, maxy, maxx);
-	map_t* themap = map_init(51, 26);
-
-	iface_init();
-	iface_drawmap(themap);
-	iface_swap();
-	while (1) {
-		uint c = iface_next_key();
-		if (c == 'q') {break;}
-	}
-	iface_cleanup();
-
-	map_clean(themap);
+	game_init();
+	game_loop();
+	game_clean();
 	return 0;
 }

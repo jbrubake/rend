@@ -2,8 +2,7 @@
 #define _INTERFACE_H_
 
 #include <curses.h>
-#include "types.h"
-#include "map.h"
+#include "game.h"
 
 #define iface_color(fg, bg) ((fg<<3) + bg)
 

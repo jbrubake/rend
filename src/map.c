@@ -1,7 +1,7 @@
-#include "interface.h"
-#include "map.h"
 #include <stdlib.h>
 #include <string.h>
+
+#include "game.h"
 
 #define CLAMP(x, u, v) ((x<(u) && x<(v)) || (x>(u) && x>(v)))
 #define map_getsize(tiles) ((tiles) * sizeof(tile_t) + sizeof(map_t))
@@ -15,7 +15,7 @@ map_t * map_init (ushort sizex, ushort sizey) {
 	int i, j;
 	const tile_t wall = {0,                                '#', iface_color(COLOR_CYAN,  COLOR_BLACK)};
 	const tile_t flr  = {TILE_WALKABLE | TILE_TRANSPARENT, '.', iface_color(COLOR_WHITE, COLOR_BLACK)};
-	const tile_t plr  = {0,                                '0', iface_color(COLOR_RED  , COLOR_BLACK)};
+	const tile_t plr  = {0,                                '#', iface_color(COLOR_RED  , COLOR_BLACK)};
 	for (i=0; i<sizex; i++) {
 		for (j=0; j<sizey; j++) {
 			t = map_get_tile(m, i, j);

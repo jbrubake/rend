@@ -1,4 +1,4 @@
-#include "interface.h"
+#include "game.h"
 
 void iface_init(void) {
 	initscr();
@@ -7,6 +7,7 @@ void iface_init(void) {
 	noecho();
 	keypad(stdscr, TRUE);
 	timeout(0);
+	curs_set(0); // Invisible cursor
 
 	// Create Colours
 	if (COLOR_PAIRS >= 8*8) {
@@ -17,7 +18,6 @@ void iface_init(void) {
 }
 void iface_cleanup(void) {
 	endwin();
-	printf("Color Pairs: %d\n", COLOR_PAIRS);
 }
 
 void iface_swap() {refresh();}
@@ -33,8 +33,9 @@ void iface_drawmap(map_t* m) {
 	for (i=0; i<m->size[0]; i++) {
 		for (j=0; j<m->size[1]; j++) {
 			t = map_get_tile(m, i, j);
-			mvaddch(j, i, t->symbol | COLOR_PAIR(t->color));
+			mvaddch(j, i, (t->symbol == '.' && !BIT_ISSET(t->flags, TILE_VISIBLE)) ? ' ' : t->symbol | COLOR_PAIR(t->color) | (A_BOLD * BIT_ISSET(t->flags, TILE_VISIBLE)));
 		}
-		init_pair(1, COLOR_RED, COLOR_BLACK);
 	}
+	const coord_t* pc = &game_d.player.pos;
+	mvaddch(pc->y, pc->x, '@' | A_BOLD);
 }
