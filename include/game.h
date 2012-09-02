@@ -13,7 +13,7 @@
 #define BIT_TOGGLE(x, y) {x ^= y;}
 #define BIT_ISSET(x, y)  (!!((x) & (y))) // The infamous cast-to-bool operator
 
-typedef struct coord_t {uint x; uint y;} coord_t;
+typedef struct coord_t {int x; int y;} coord_t;
 
 typedef struct actor_t {
 	uint symbol;
@@ -24,6 +24,7 @@ typedef struct actor_t {
 // Global game data
 struct game_t {
 	uint time;
+	uint view;
 	actor_t player;
 	map_t *map;
 } game_d;
@@ -31,5 +32,7 @@ struct game_t {
 int  game_init();
 int  game_loop();
 void game_clean();
+
+#include "fov.h"
 
 #endif

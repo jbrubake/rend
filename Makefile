@@ -1,7 +1,10 @@
 CC=gcc
-CFLAGS=-Iinclude -DWINDOWS -DDEBUG -c -Wall -g
+CFLAGS=-Iinclude -DWINDOWS -DDEBUG -DMEMWATCH -c -Wall -g
 LDFLAGS=-static-libgcc -Llib -lpdcurses -lmingw32 -mconsole
 SOURCES= \
+src/memwatch.c \
+src/containers.c \
+src/fov.c \
 src/game.c \
 src/interface.c \
 src/map.c \
@@ -14,10 +17,18 @@ EXECUTABLE=poc.exe
 all: $(SOURCES) $(EXECUTABLE)
 
 clean:
-	rm -f $(OBJECTS) $(EXECUTABLE)
+	rm -f $(OBJECTS) $(EXECUTABLE) memwatch.log
 
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) -o $@ $(OBJECTS) $(LDFLAGS)
+
+test-varr: src/memwatch.o
+	$(CC) $(CFLAGS) -DUNITVARR src/containers.c -o src/containers.o
+	$(CC) -o $@ src/memwatch.o src/containers.o $(LDFLAGS)
+
+test-dllist: src/memwatch.o
+	$(CC) $(CFLAGS) -DUNITDLLIST src/containers.c -o src/containers.o
+	$(CC) -o $@ src/memwatch.o src/containers.o $(LDFLAGS)
 
 .SUFFIXES: .c .o
 

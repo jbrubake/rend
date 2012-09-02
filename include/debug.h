@@ -1,6 +1,8 @@
 #ifndef _DEBUG_H_
 #define _DEBUG_H_
 
+#include "memwatch.h"
+
 /*
  * It's necessary to define NDEBUG before including assert.h.
  */
