@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Iinclude -DWINDOWS -DDEBUG -DMEMWATCH -c -Wall -g
+CFLAGS=-Iinclude -DWINDOWS -DDEBUG -DMEMATCH -c -Wall -g
 LDFLAGS=-static-libgcc -Llib -lpdcurses -lmingw32 -mconsole
 SOURCES= \
 src/memwatch.c \
@@ -26,8 +26,8 @@ test-varr: src/memwatch.o
 	$(CC) $(CFLAGS) -DUNITVARR src/containers.c -o src/containers.o
 	$(CC) -o $@ src/memwatch.o src/containers.o $(LDFLAGS)
 
-test-dllist: src/memwatch.o
-	$(CC) $(CFLAGS) -DUNITDLLIST src/containers.c -o src/containers.o
+test-llist: src/memwatch.o
+	$(CC) $(CFLAGS) -DUNITLLIST src/containers.c -o src/containers.o
 	$(CC) -o $@ src/memwatch.o src/containers.o $(LDFLAGS)
 
 .SUFFIXES: .c .o

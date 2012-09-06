@@ -38,4 +38,9 @@ void iface_drawmap(map_t* m) {
 	}
 	const coord_t* pc = &game_d.player.pos;
 	mvaddch(pc->y, pc->x, '@' | A_BOLD);
+	if (game_d.fov.mode) {
+		tile_t *t = map_get_tile(game_d.map, game_d.fov.k.x, game_d.fov.k.y);
+		if (!t) {return;}
+		mvaddch(game_d.fov.k.y, game_d.fov.k.x, '%' | COLOR_PAIR(t->color) | A_BOLD);
+	}
 }

@@ -11,12 +11,21 @@ int arifunc (const char * x) {
 	return 2;
 }
 
+void outfunc(int x) {
+	static int o = 1000;
+	if (o>0) {printf("%c", x);}
+	o--;
+}
+
 int main() {
 	mwInit();
 	mwSetAriFunc(arifunc);
+	mwSetOutFunc(outfunc);
+	free((void*)1);
 	game_init();
 	game_loop();
 	game_clean();
+	mwSetOutFunc(outfunc);
 	mwTerm();
 	return 0;
 }

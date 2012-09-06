@@ -25,6 +25,11 @@ typedef struct actor_t {
 struct game_t {
 	uint time;
 	uint view;
+	struct {
+		uint mode;
+		coord_t k;
+		uint v;
+	} fov;
 	actor_t player;
 	map_t *map;
 } game_d;

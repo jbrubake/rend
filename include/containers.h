@@ -34,17 +34,27 @@ void    varr_remove(varr_t** hvarr,     uint i);
 #define varr_clean(varr) free(varr)
 #define varr(v) (void*)(v->memory)
 
-typedef struct dllist_t {
-	// Order is important
-	void* data;
-	struct dllist_t *n, *p;
-} dllist_t;
+struct llist_node_t;
+struct llist_t;
 
-#define dllist_init() (dllist_t*)(0)
-dllist_t* dllist_add(dllist_t** hdl, void* data);
-dllist_t* dllist_addprev(dllist_t** hdl, void* data);
-dllist_t* dllist_remove (dllist_t** hdl);
-void      dllist_clean  (dllist_t* dl);
-void      dllist_cleanf (dllist_t* dl);
+typedef struct llist_node_t {
+	// Order is important
+	struct llist_t* par; // Parent list.
+	struct llist_node_t *n, *p;
+	char data[0];
+} llist_node_t;
+
+typedef struct llist_t {
+	// Order is important
+	int esize;
+	llist_node_t *f, *l;
+} llist_t;
+
+#define llist_init(esize) (llist_t){esize, 0, 0}
+void          llist_add     (llist_t* ll,      const void* data);
+llist_node_t* llist_addafter(llist_node_t* ln, const void* data);
+llist_node_t* llist_addprev (llist_node_t* ln, const void* data);
+void          llist_remove  (llist_node_t** hln);
+void          llist_clean   (llist_t* ll);
 
 #endif

@@ -13,16 +13,23 @@ map_t * map_init (ushort sizex, ushort sizey) {
 	m = malloc(map_getsize(osize));
 	m->size[0] = sizex; m->size[1] = sizey;
 	int i, j;
-	const tile_t wall = {0,                                '#', iface_color(COLOR_WHITE, COLOR_BLACK)};//iface_color(COLOR_CYAN,  COLOR_BLACK)};
-	const tile_t flr  = {TILE_WALKABLE | TILE_TRANSPARENT, '.', iface_color(COLOR_WHITE, COLOR_BLACK)};//iface_color(COLOR_WHITE, COLOR_BLACK)};
-	const tile_t plr  = {0,                                '#', iface_color(COLOR_WHITE, COLOR_BLACK)};//iface_color(COLOR_RED  , COLOR_BLACK)};
+	const tile_t wall = {0,                                '#', iface_color(COLOR_CYAN,  COLOR_BLACK)};
+	const tile_t flr  = {TILE_WALKABLE | TILE_TRANSPARENT, '.', iface_color(COLOR_WHITE, COLOR_BLACK)};
+	const tile_t plr  = {0,                                '#', iface_color(COLOR_RED  , COLOR_BLACK)};
 	for (i=0; i<sizex; i++) {
 		for (j=0; j<sizey; j++) {
 			t = map_get_tile(m, i, j);
-			if (i == 0 || i == sizex-1 || j == 0 || j == sizey-1) {*t =  wall; continue;}
-			*t = (!(i % 5) && !(j % 5)) ? plr : flr;
+			if (i == 0 || i == sizex-1 || j == 0 || j == sizey-1) {*t =  wall;}
+			else if (i == 40) {*t = plr;}
+//			else if (j == 10) {*t = plr;}
+			else {*t = flr;}
 		}
 	}
+	*map_get_tile(m,  8,  10) = plr;
+	*map_get_tile(m,  9,  10) = plr;
+	*map_get_tile(m, 10,  9) = plr;
+	*map_get_tile(m, 10,  8) = plr;
+	*map_get_tile(m, 10, 10) = plr;
 	return m;
 }
 void    map_clean(map_t *m) {free(m);}

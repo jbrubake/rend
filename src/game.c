@@ -42,6 +42,34 @@ static int move_player(uint k) {
 }
 
 static int toggle_view(uint k) {game_d.view++; return 0;}
+static int toggle_fov_debug(uint k) {
+	game_d.fov.mode = !game_d.fov.mode;
+	game_d.fov.k = game_d.player.pos;
+	game_d.fov.v = 0;
+	return 0;
+}
+static int move_fov_debug  (uint k) {
+	switch(k) {
+		case 'a':
+			game_d.fov.k.x--;
+			break;
+		case 'd':
+			game_d.fov.k.x++;
+			break;
+		case 'w':
+			game_d.fov.k.y--;
+			break;
+		case 's':
+			game_d.fov.k.y++;
+			break;
+	}
+	game_d.fov.v = 0;
+	return 0;
+}
+static int nview_debug(uint k) {
+	game_d.fov.v++;
+	return 0;
+}
 
 static keyhashnode_t keynodes[] = {
 	KEY_DEF(KEY_A1      , move_player),
@@ -58,6 +86,12 @@ static keyhashnode_t keynodes[] = {
 	KEY_DEF(KEY_LEFT    , move_player),
 	KEY_DEF(KEY_RIGHT   , move_player),
 	KEY_DEF('+'         , toggle_view),
+	KEY_DEF('k'         , toggle_fov_debug),
+	KEY_DEF('a'         , move_fov_debug),
+	KEY_DEF('d'         , move_fov_debug),
+	KEY_DEF('w'         , move_fov_debug),
+	KEY_DEF('s'         , move_fov_debug),
+	KEY_DEF('z'         , nview_debug),
 };
 
 int game_init() {
@@ -65,7 +99,7 @@ int game_init() {
 	uint i; for (i=0; i<sizeof(keynodes)/sizeof(*keynodes); i++) {
 		key_add(keynodes + i);
 	}
-	game_d.map = map_init(51, 26);
+	game_d.map = map_init(80, 30);
 	game_d.player.pos = (coord_t){1,1};
 	return 0;
 }
@@ -75,7 +109,7 @@ int game_loop() {
 		int c = iface_next_key();
 		if (c == 'q') {break;}
 		key_exec(c);
-		fov_calc(game_d.map, game_d.player.pos, 12);
+		fov_calc(game_d.map, game_d.player.pos, 6);
 		iface_drawmap(game_d.map);
 		mvprintw(30, 1, "                         ");
 		mvprintw(30, 1, "%d %d", game_d.player.pos.x, game_d.player.pos.y);
