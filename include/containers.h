@@ -57,4 +57,70 @@ llist_node_t* llist_addprev (llist_node_t* ln, const void* data);
 void          llist_remove  (llist_node_t** hln);
 void          llist_clean   (llist_t* ll);
 
+//////////////////////////////////////////////////////////////////////////
+/*
+	Declare a struct like so:
+	struct example_t {
+		ref_t ref_t_which_you_can_call_whatever_you_want;
+		// Normal variables here.
+	};
+
+	To allocate, use:
+	struct example_t* ex = ref_alloc(sizeof(*ex));
+
+	To free, use:
+	ref_free(ex);
+
+	To create a counted reference, use:
+	newex = ref_copy(ex);
+
+	newex == ex, but sometimes the return behaviour is useful.
+
+	That's it!
+ */
+//////////////////////////////////////////////////////////////////////////
+
+typedef struct ref_t {int num;} ref_t;
+
+void* ref_alloc(int size);
+void* ref_copy(void* r);
+void  ref_free(void* r);
+
+/////////////////////////////////////////////////////////////////////////
+/*
+	Define a comparator function for x and y:
+
+	int (*heap_cmp)(void* x, void* y)
+	Returning -1 for x<y
+	Returning +1 for x>y
+	Returning  0 for x=y
+	The above gives a min-heap.
+
+	Create a heap with:
+	heap_t h = heap_init(heap_cmp)
+
+	Then use "heap_push(&h)" to add values and "void* r = heap_pull(&h)" to extract the least element.
+	heap_clean() removes values, but will not free their memory on anything like that.
+	You can equally just pop all of the values in the heap.
+ */
+/////////////////////////////////////////////////////////////////////////
+
+typedef int (*heap_cmp)(void* x, void* y);
+
+typedef struct heap_node_t {
+	void* data;
+	struct heap_node_t *p, *l, *r;
+} heap_node_t;
+
+typedef struct heap_t {
+	heap_cmp     cmp;
+	int N, D;
+	heap_node_t *root;
+} heap_t;
+
+#define heap_init(cmp) {cmp, 0}
+void   heap_push    (heap_t* h, void* x);
+void*  heap_pop     (heap_t* h);
+void   heap_clean   (heap_t* h);
+
 #endif

@@ -100,7 +100,7 @@ static void fov_shallowbump(llist_node_t** hln, coord_t b) {
 	view_t * const v = (void*)(*hln)->data;
 	v->shallow.e = (coord_t){b.x, b.y+1};
 
-	//llist_add(&v->shallowbumps, &b);
+	llist_add(&v->shallowbumps, &b);
 
 	llist_node_t * bumps = v->steepbumps.f;
 	int r;
@@ -109,7 +109,7 @@ static void fov_shallowbump(llist_node_t** hln, coord_t b) {
 		r = fov_linesquare(v->shallow, *b2);
 		switch(r) {
 			case WITHIN:
-			case ABOVE:
+			case BELOW:
 				v->shallow.s = (coord_t){b2->x+1, b2->y};
 			default: break;
 		}
@@ -122,7 +122,7 @@ static void fov_steepbump(llist_node_t** hln, coord_t b) {
 	view_t * const v = (void*)(*hln)->data;
 	v->steep.e = (coord_t){b.x+1, b.y};
 
-	//llist_add(&v->steepbumps, &b);
+	llist_add(&v->steepbumps, &b);
 
 	llist_node_t * bumps = v->shallowbumps.f;
 	int r;
@@ -132,8 +132,10 @@ static void fov_steepbump(llist_node_t** hln, coord_t b) {
 		r = fov_linesquare(v->steep, *b2);
 		switch(r) {
 			case WITHIN:
-			case BELOW:
+			case ABOVE:
+				{static int i = 0;
 				v->steep.s = (coord_t){b2->x, b2->y+1};
+				 if (!i) {mvprintw(35, 1, "HIT: %d %d %d", r, v->steep.s.x, v->steep.s.y); i++;}}
 			default: break;
 		}
 		bumps = bumps->n;
