@@ -118,7 +118,7 @@ typedef struct heap_t {
 	heap_node_t *root;
 } heap_t;
 
-#define heap_init(cmp) {cmp, 0}
+#define heap_init(cmp) (heap_t){cmp, 0}
 void   heap_push    (heap_t* h, void* x);
 void*  heap_pop     (heap_t* h);
 void   heap_clean   (heap_t* h);

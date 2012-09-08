@@ -1,9 +1,14 @@
 #ifndef _GAME_H_
 #define _GAME_H_
 
+typedef struct coord_t {int x; int y;} coord_t;
+
+#include "containers.h"
 #include "types.h"
 #include "map.h"
 #include "interface.h"
+#include "fov.h"
+#include "kiss.h"
 
 #include "debug.h"
 
@@ -13,23 +18,31 @@
 #define BIT_TOGGLE(x, y) {x ^= y;}
 #define BIT_ISSET(x, y)  (!!((x) & (y))) // The infamous cast-to-bool operator
 
-typedef struct coord_t {int x; int y;} coord_t;
+typedef struct event_t {
+	ref_t refc;
+	int type;
+	int priority;
+	char data[0];
+} event_t;
 
 typedef struct actor_t {
-	uint symbol;
-	uint attrib;
+	ref_t refc;
 	coord_t pos;
+	u8 symbol;
+	u8 color;
 } actor_t;
 
 // Global game data
 struct game_t {
-	uint time;
+	int time;
 	uint view;
 	struct {
 		uint mode;
 		coord_t k;
 		uint v;
 	} fov;
+	heap_t  pqueue;
+	llist_t goblins;
 	actor_t player;
 	map_t *map;
 } game_d;
@@ -37,7 +50,5 @@ struct game_t {
 int  game_init();
 int  game_loop();
 void game_clean();
-
-#include "fov.h"
 
 #endif

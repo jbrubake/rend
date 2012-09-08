@@ -21,7 +21,6 @@ int main() {
 	mwInit();
 	mwSetAriFunc(arifunc);
 	mwSetOutFunc(outfunc);
-	free((void*)1);
 	game_init();
 	game_loop();
 	game_clean();

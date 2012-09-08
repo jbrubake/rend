@@ -1,75 +1,8 @@
 #include "game.h"
 
 #include "keymap.h"
-
-static int move_player(uint k) {
-	const static coord_t m[] = {
-		{-1,-1},
-		{ 0,-1},
-		{ 1,-1},
-		{-1, 0},
-		{ 0, 0},
-		{ 1, 0},
-		{-1, 1},
-		{ 0, 1},
-		{ 1, 1},
-	};
-	uint v;
-	switch (k)
-	{
-		case KEY_A1:    v = 0; break;
-		case KEY_UP:
-		case KEY_A2:    v = 1; break;
-		case KEY_A3:    v = 2; break;
-		case KEY_B1:
-		case KEY_LEFT:  v = 3; break;
-		case KEY_B2:    v = 4; break;
-		case KEY_B3:
-		case KEY_RIGHT: v = 5; break;
-		case KEY_C1:    v = 6; break;
-		case KEY_C2:
-		case KEY_DOWN:  v = 7; break;
-		case KEY_C3:    v = 8; break;
-	}
-	game_d.player.pos.x += m[v].x;
-	game_d.player.pos.y += m[v].y;
-	const tile_t* t = map_get_tile(game_d.map, game_d.player.pos.x, game_d.player.pos.y);
-	if (!(t->flags & TILE_WALKABLE)) {
-		game_d.player.pos.x -= m[v].x;
-		game_d.player.pos.y -= m[v].y;
-	}
-	return 0;
-}
-
-static int toggle_view(uint k) {game_d.view++; return 0;}
-static int toggle_fov_debug(uint k) {
-	game_d.fov.mode = !game_d.fov.mode;
-	game_d.fov.k = game_d.player.pos;
-	game_d.fov.v = 0;
-	return 0;
-}
-static int move_fov_debug  (uint k) {
-	switch(k) {
-		case 'a':
-			game_d.fov.k.x--;
-			break;
-		case 'd':
-			game_d.fov.k.x++;
-			break;
-		case 'w':
-			game_d.fov.k.y--;
-			break;
-		case 's':
-			game_d.fov.k.y++;
-			break;
-	}
-	game_d.fov.v = 0;
-	return 0;
-}
-static int nview_debug(uint k) {
-	game_d.fov.v++;
-	return 0;
-}
+#include "eventmanager.h"
+#include "control_functions.h"
 
 static keyhashnode_t keynodes[] = {
 	KEY_DEF(KEY_A1      , move_player),
@@ -94,26 +27,78 @@ static keyhashnode_t keynodes[] = {
 	KEY_DEF('z'         , nview_debug),
 };
 
+//////////////////////////
+static void gobbo_generate(coord_t p, int priority) {
+	actor_t* g  = ref_alloc(sizeof(*g));
+	event_t* ev = ref_alloc(sizeof(*ev) + sizeof(actor_t*));
+	g->symbol = 'g';
+	g->color = iface_color(COLOR_WHITE, COLOR_BLACK);
+	g->pos = p;
+	ev->type = GOBBO_REST;
+	ev->priority = priority;
+	*(actor_t* *)(ev->data) = g; // FIXME: Could be ref-copied.
+	llist_add(&game_d.goblins, &g);
+	heap_push(&game_d.pqueue, ev);
+}
+static void calc_occupancy() {
+	map_t* const m = game_d.map;
+	int i; for (i=0; i<m->size[0]*m->size[1]; i++) {BIT_UNSET(m->tiles[i].flags, TILE_OCCUPIED);}
+	llist_node_t *gn = game_d.goblins.f;
+	tile_t *t;
+	while (gn) {
+		const actor_t* const g = *(actor_t* *)gn->data;
+		t = map_get_tile(m, g->pos.x, g->pos.y);
+		if (t) {
+			BIT_SET(t->flags, TILE_OCCUPIED);
+		}
+		gn = gn->n;
+	}
+	t = map_get_tile(m, game_d.player.pos.x, game_d.player.pos.y);
+	if (t) {
+		BIT_SET(t->flags, TILE_OCCUPIED);
+	}
+}
+//////////////////////////
+
+static int priority_cmp(void* x, void* y) {
+	return ((event_t*)x)->priority - ((event_t*)y)->priority;
+}
 int game_init() {
+	kiss_seed(0);
 	iface_init();
 	uint i; for (i=0; i<sizeof(keynodes)/sizeof(*keynodes); i++) {
 		key_add(keynodes + i);
 	}
-	game_d.map = map_init(80, 30);
+	game_d.map = map_init(60, 30);
 	game_d.player.pos = (coord_t){1,1};
+
+	game_d.pqueue = heap_init(priority_cmp);
+	game_d.goblins = llist_init(sizeof(actor_t*));
+
+	{
+		event_t *ev = ref_alloc(sizeof(*ev));
+		ev->type = PLAYER_REST;
+		ev->priority = 25;
+		heap_push(&game_d.pqueue, ev);
+	}
+
+	gobbo_generate((coord_t){ 5,  5}, 50);
+	gobbo_generate((coord_t){ 5, 10},100);
+	gobbo_generate((coord_t){10,  5},150);
+	gobbo_generate((coord_t){10, 10},200);
 	return 0;
 }
 
 int game_loop() {
 	while (1) {
-		int c = iface_next_key();
-		if (c == 'q') {break;}
-		key_exec(c);
 		fov_calc(game_d.map, game_d.player.pos, 6);
+		calc_occupancy();
 		iface_drawmap(game_d.map);
-		mvprintw(30, 1, "                         ");
-		mvprintw(30, 1, "%d %d", game_d.player.pos.x, game_d.player.pos.y);
 		iface_swap();
+
+		event_t* ev = heap_pop(&game_d.pqueue);
+		game_d.time = ev->priority;
+		if (handle_event(ev)) {	return 0; }
 	}
 	return 0;
 }
@@ -121,4 +106,18 @@ int game_loop() {
 void game_clean() {
 	iface_cleanup();
 	map_clean(game_d.map);
+	// Clean the event queue
+	void* x;
+	while (game_d.pqueue.root) {
+		x = heap_pop(&game_d.pqueue);
+		ref_free(x);
+	}
+	// Clean the goblin list
+	llist_node_t* n = game_d.goblins.f;
+	while (n) {
+		const actor_t * const g = *(actor_t* *)n->data;
+		printf("%d %d\n", g->pos.x, g->pos.y);
+		ref_free(*(actor_t* *)(n->data));
+		llist_remove(&n);
+	}
 }

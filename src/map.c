@@ -30,6 +30,10 @@ map_t * map_init (ushort sizex, ushort sizey) {
 	*map_get_tile(m, 10,  9) = plr;
 	*map_get_tile(m, 10,  8) = plr;
 	*map_get_tile(m, 10, 10) = plr;
+
+	*map_get_tile(m,  20,  10) = plr;
+	*map_get_tile(m,  22,  10) = plr;
+	*map_get_tile(m,  22,  11) = plr;
 	return m;
 }
 void    map_clean(map_t *m) {free(m);}

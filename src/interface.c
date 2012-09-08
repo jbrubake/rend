@@ -33,14 +33,22 @@ void iface_drawmap(map_t* m) {
 	for (i=0; i<m->size[0]; i++) {
 		for (j=0; j<m->size[1]; j++) {
 			t = map_get_tile(m, i, j);
-			mvaddch(j, i, (t->symbol == '.' && !BIT_ISSET(t->flags, TILE_VISIBLE)) ? ' ' : t->symbol | COLOR_PAIR(t->color) | (A_BOLD * BIT_ISSET(t->flags, TILE_VISIBLE)));
+			mvaddch(j, i, t->symbol == '.' && (!BIT_ISSET(t->flags, TILE_VISIBLE)) ? ' ' : t->symbol | COLOR_PAIR(t->color) | (A_BOLD * BIT_ISSET(t->flags, TILE_VISIBLE)));
 		}
 	}
 	const coord_t* pc = &game_d.player.pos;
 	mvaddch(pc->y, pc->x, '@' | A_BOLD);
 	if (game_d.fov.mode) {
-		tile_t *t = map_get_tile(game_d.map, game_d.fov.k.x, game_d.fov.k.y);
+		t = map_get_tile(game_d.map, game_d.fov.k.x, game_d.fov.k.y);
 		if (!t) {return;}
 		mvaddch(game_d.fov.k.y, game_d.fov.k.x, '%' | COLOR_PAIR(t->color) | A_BOLD);
+	}
+	llist_node_t *g = game_d.goblins.f;
+	while (g) {
+		actor_t* const actor = *(actor_t* *)(g->data);
+		t = map_get_tile(game_d.map, actor->pos.x, actor->pos.y);
+		if (!t) {g = g->n; continue;}
+		if (BIT_ISSET(t->flags, TILE_VISIBLE)) {mvaddch(actor->pos.y, actor->pos.x, actor->symbol | COLOR_PAIR(actor->color));}
+		g = g->n;
 	}
 }

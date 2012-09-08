@@ -6,6 +6,7 @@
 #define TILE_WALKABLE    BITS(0)
 #define TILE_TRANSPARENT BITS(1)
 #define TILE_VISIBLE     BITS(2)
+#define TILE_OCCUPIED    BITS(3)
 
 typedef struct tile_t {
 	u16 flags;

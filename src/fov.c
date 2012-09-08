@@ -1,6 +1,5 @@
 #include <limits.h>
 
-#include "containers.h"
 #include "game.h"
 
 typedef struct line_t {
@@ -133,9 +132,7 @@ static void fov_steepbump(llist_node_t** hln, coord_t b) {
 		switch(r) {
 			case WITHIN:
 			case ABOVE:
-				{static int i = 0;
 				v->steep.s = (coord_t){b2->x, b2->y+1};
-				 if (!i) {mvprintw(35, 1, "HIT: %d %d %d", r, v->steep.s.x, v->steep.s.y); i++;}}
 			default: break;
 		}
 		bumps = bumps->n;
@@ -158,7 +155,6 @@ static void fov_split(llist_node_t **hln, coord_t sq) {
 static void fov_clear(map_t* m) {
 	uint i; for (i=0; i<m->size[0] * m->size[1]; i++) {
 		BIT_UNSET(m->tiles[i].flags, TILE_VISIBLE);
-		m->tiles[i].color = iface_color(COLOR_WHITE, COLOR_BLACK);
 	}
 }
 
