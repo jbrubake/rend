@@ -69,7 +69,7 @@ int game_init() {
 	uint i; for (i=0; i<sizeof(keynodes)/sizeof(*keynodes); i++) {
 		key_add(keynodes + i);
 	}
-	game_d.map = map_init(60, 30);
+	game_d.map = map_init(80, 20);
 	game_d.player.pos = (coord_t){1,1};
 
 	game_d.pqueue = heap_init(priority_cmp);
@@ -82,10 +82,10 @@ int game_init() {
 		heap_push(&game_d.pqueue, ev);
 	}
 
-	gobbo_generate((coord_t){ 5,  5}, 50);
-	gobbo_generate((coord_t){ 5, 10},100);
-	gobbo_generate((coord_t){10,  5},150);
-	gobbo_generate((coord_t){10, 10},200);
+	gobbo_generate((coord_t){ 6,  6}, 50);
+	gobbo_generate((coord_t){ 6, 11},100);
+	gobbo_generate((coord_t){11,  6},150);
+	gobbo_generate((coord_t){11, 11},200);
 	return 0;
 }
 
@@ -115,8 +115,6 @@ void game_clean() {
 	// Clean the goblin list
 	llist_node_t* n = game_d.goblins.f;
 	while (n) {
-		const actor_t * const g = *(actor_t* *)n->data;
-		printf("%d %d\n", g->pos.x, g->pos.y);
 		ref_free(*(actor_t* *)(n->data));
 		llist_remove(&n);
 	}
