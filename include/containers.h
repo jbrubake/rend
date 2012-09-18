@@ -6,6 +6,8 @@
 
 #include "types.h"
 
+typedef void (*free_func)(void*);
+
 typedef struct stk_t {
 	ushort esize;
 	ushort maxsize;
@@ -124,3 +126,24 @@ void*  heap_pop     (heap_t* h);
 void   heap_clean   (heap_t* h);
 
 #endif
+
+struct reflist_t;
+struct reflist_node_t;
+
+typedef struct reflist_node_t {
+	// Order is important
+	struct reflist_t* par;
+	struct reflist_node_t *n, *p;
+	void* data;
+} reflist_node_t;
+
+typedef struct reflist_t {
+	reflist_node_t *f, *l;
+} reflist_t;
+
+#define reflist_init(esize) (reflist_t){0, 0}
+reflist_node_t*  reflist_add     (reflist_t* ll,      void* data);
+reflist_node_t*  reflist_addafter(reflist_node_t* ln, void* data);
+reflist_node_t*  reflist_addprev (reflist_node_t* ln, void* data);
+void*            reflist_remove  (reflist_node_t** hln);
+void             reflist_clean   (reflist_t* ll, free_func f);

@@ -39,6 +39,10 @@ test-heap: src/memwatch.o
 	$(CC) $(CFLAGS) -DUNITHEAP src/containers.c -o src/containers.o
 	$(CC) -o $@ src/memwatch.o src/containers.o $(LDFLAGS)
 
+test-reflist: src/memwatch.o
+	$(CC) $(CFLAGS) -DUNITREFLIST src/containers.c -o src/containers.o
+	$(CC) -o $@ src/memwatch.o src/containers.o $(LDFLAGS)
+
 .SUFFIXES: .c .o
 
 .c.o:

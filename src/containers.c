@@ -384,3 +384,100 @@ int main() {
 }
 
 #endif
+
+reflist_node_t* reflist_add(reflist_t* ll, void* data) {
+	reflist_node_t * const x = malloc(sizeof(*x));
+	*x = (reflist_node_t){ll};
+	x->data = data;
+
+	if (!ll->f) {ll->f = ll->l = x; return x;}
+	x->p = ll->l;
+	x->p->n = x;
+	ll->l = x;
+	return x;
+}
+
+reflist_node_t*  reflist_addafter(reflist_node_t* ln, void* data) {
+	reflist_t * const      ll = ln->par;
+	reflist_node_t * const x  = malloc(sizeof(*x));
+	*x = (reflist_node_t){ll};
+	x->data = data;
+
+	x->p = ln;
+	x->n = ln->n;
+	if (x->n) {x->n->p = x;}
+	if (x->p) {x->p->n = x;}
+	if (ll->l == x->p) {ll->l = x;}
+	return x;
+}
+
+reflist_node_t*  reflist_addprev (reflist_node_t* ln, void* data) {
+	reflist_t * const      ll = ln->par;
+	reflist_node_t * const x  = malloc(sizeof(*x));
+	*x = (reflist_node_t){ll};
+	x->data =data;
+
+	x->n = ln;
+	x->p = ln->p;
+	if (x->n) {x->n->p = x;}
+	if (x->p) {x->p->n = x;}
+	if (ll->f == x->n) {ll->f = x;}
+	return x;
+}
+
+void* reflist_remove (reflist_node_t** hln) {
+	reflist_node_t * const ln = *hln;
+	reflist_t * const      ll = ln->par;
+	reflist_node_t * const  p = ln->p;
+	reflist_node_t * const  n = ln->n;
+	void* r;
+
+	if (p) {p->n = n;}
+	if (n) {n->p = p;}
+
+	if (ll->f == ln) {ll->f = ln->n;}
+	if (ll->l == ln) {ll->l = ln->p;}
+
+	r = ln->data;
+	free(ln);
+	*hln = p ? p : n;
+	return r;
+}
+
+void reflist_clean (reflist_t* ll, free_func f) {
+	reflist_node_t * ln = ll->f;
+	while (ln) {if (f) {f(reflist_remove(&ln));}}
+}
+
+#ifdef UNITREFLIST
+
+#include <stdio.h>
+
+void print_int(void* intp) {
+	int* const v = intp;
+	printf("%d ", *v);
+}
+
+int main() {
+	reflist_t ll; reflist_node_t *iter, *i;
+	int x[] = {0, 1, 2, 3, 4, 5, 6, 7};
+
+	// Test 1
+	ll = reflist_init();
+	reflist_add(&ll, x+0);
+	reflist_add(&ll, x+1);
+	iter = reflist_add(&ll, x+2);
+	reflist_add(&ll, x+3);
+	reflist_add(&ll, x+4);
+	i = ll.f;
+	printf("[ "); while (i)
+	{
+		print_int(i->data);
+		i=i->n;
+	} printf("]\n");
+	printf("Removed: %d\n", *(int*)reflist_remove(&iter));
+	printf("[ "); reflist_clean(&ll, print_int); printf("]\n");
+	return 0;
+}
+
+#endif
