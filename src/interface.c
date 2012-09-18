@@ -43,9 +43,9 @@ void iface_drawmap(map_t* m) {
 		if (!t) {return;}
 		mvaddch(game_d.fov.k.y, game_d.fov.k.x, '%' | COLOR_PAIR(t->color) | A_BOLD);
 	}
-	llist_node_t *g = game_d.goblins.f;
+	reflist_node_t *g = game_d.goblins.f;
 	while (g) {
-		actor_t* const actor = *(actor_t* *)(g->data);
+		actor_t* const actor = g->data;
 		t = map_get_tile(game_d.map, actor->pos.x, actor->pos.y);
 		if (!t) {g = g->n; continue;}
 		if (BIT_ISSET(t->flags, TILE_VISIBLE)) {mvaddch(actor->pos.y, actor->pos.x, actor->symbol | COLOR_PAIR(actor->color));}

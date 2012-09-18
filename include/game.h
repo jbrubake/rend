@@ -22,7 +22,6 @@ typedef struct event_t {
 	ref_t refc;
 	int type;
 	int priority;
-	char data[0];
 } event_t;
 
 typedef struct actor_t {
@@ -31,6 +30,11 @@ typedef struct actor_t {
 	u8 symbol;
 	u8 color;
 } actor_t;
+
+typedef struct event_rest_t {
+	event_t event;
+	actor_t *creature;
+} event_rest_t;
 
 // Global game data
 struct game_t {
@@ -42,7 +46,7 @@ struct game_t {
 		uint v;
 	} fov;
 	heap_t  pqueue;
-	llist_t goblins;
+	reflist_t goblins;
 	actor_t player;
 	map_t *map;
 } game_d;

@@ -8,8 +8,10 @@ static const coord_t where[] = {
 	{-1, -1},
 	{-1, +1}
 };
-static int gobbo_move(event_t* ev) {
-	actor_t * const g = *(actor_t* *)ev->data;
+
+static int gobbo_move(void* event) {
+	event_rest_t * const ev = event;
+	actor_t * const g = ev->creature;
 	const coord_t * const w = where + kiss_rand()%8;
 	tile_t* t = map_get_tile(game_d.map, g->pos.x + w->x, g->pos.y + w->y);
 	if ( t && !BIT_ISSET(t->flags, TILE_OCCUPIED) && BIT_ISSET(t->flags, TILE_WALKABLE) ) {
@@ -18,11 +20,13 @@ static int gobbo_move(event_t* ev) {
 	}
 
 	ref_copy(ev); // Make sure the event is not deleted.
-	ev->priority = game_d.time + 100; // Renew
+	ev->event.priority = game_d.time + 100; // Renew
 	heap_push(&game_d.pqueue, ev);
 	return 0;
 }
-static int player_move(event_t* ev) {
+
+static int player_move(void* event) {
+	event_t * const ev = event;
 	int c;
 
 	while (1) {
@@ -38,7 +42,7 @@ static int player_move(event_t* ev) {
 	return 0;
 }
 
-typedef int (*event_func)(event_t*);
+typedef int (*event_func)(void*);
 enum {
 	GOBBO_REST,
 	PLAYER_REST,
