@@ -3,8 +3,10 @@
 
 #include <stdlib.h>
 #include <string.h>
-
+#include <stddef.h>
 #include "types.h"
+
+#define containerof(ptr, type, member) ( (type *)( (void *)(ptr) - offsetof(type,member) ) )
 
 typedef void (*free_func)(void*);
 
@@ -147,3 +149,31 @@ reflist_node_t*  reflist_addafter(reflist_node_t* ln, void* data);
 reflist_node_t*  reflist_addprev (reflist_node_t* ln, void* data);
 void*            reflist_remove  (reflist_node_t** hln);
 void             reflist_clean   (reflist_t* ll, free_func f);
+
+/////////////////////////////////////////////////////////////////////////
+/*
+	Embedded linked list. You can just use:
+	link_addnext, link_addprev, link_remove, link_data by themselves, or additionally:
+	link_init
+	link_add
+	link_erase
+ */
+/////////////////////////////////////////////////////////////////////////
+
+typedef struct link_list_t {
+	struct link_t *f, *l;
+} link_list_t;
+
+typedef struct link_t {
+	struct link_t * n;
+	struct link_t * p;
+} link_t;
+
+void link_addnext(link_t* root, link_t* node);
+void link_addprev(link_t* root, link_t* node);
+link_t* link_remove(link_t* el);
+#define link_data(ptype, elname, el) containerof(el, ptype, elname)
+#define link_init() (link_list_t){0, 0}
+void link_add(link_list_t* h, link_t* e);
+void link_erase(link_list_t* h, link_t* e);
+void link_clean(link_list_t* h);

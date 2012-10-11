@@ -481,3 +481,52 @@ int main() {
 }
 
 #endif
+
+
+void link_addnext(link_t* root, link_t* node) {
+	link_t * const n = root->n;
+	root->n = node;
+	node->p = root;
+	node->n = n;
+	if (n) {n->p = node;}
+}
+
+void link_addprev(link_t* root, link_t* node) {
+	link_t * const p = root->n;
+	root->p = node;
+	node->n = root;
+	node->p = p;
+	if (p) {p->n = node;}
+}
+
+link_t* link_remove(link_t* el) {
+	link_t * const p = el->p;
+	link_t * const n = el->n;
+	el->n = el->p = 0;
+	if (p) {p->n = n;}
+	if (n) {n->p = p;}
+	return p?p:n;
+}
+
+void link_add(link_list_t* h, link_t* e) {
+	if (!h->l) {
+		h->l = h->f = e;
+		return;
+	}
+	link_addnext(h->l, e);
+	h->l = e;
+}
+
+void link_erase(link_list_t* h, link_t* e) {
+	if (h->l == e) {
+		if (h->f == h->l) {*h = link_init();}
+		else {h->l = h->l->p;}
+	}
+	else if (h->f == e) {h->f = h->f->n;}
+	link_remove(e);
+}
+
+void link_clean(link_list_t* h) {
+	link_erase(h, h->f);
+	*h = (link_list_t){0, 0};
+}
