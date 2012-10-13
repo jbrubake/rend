@@ -49,6 +49,7 @@ struct game_t {
 	reflist_t goblins;
 	actor_t player;
 	map_t *map;
+	iface_t iface;
 } game_d;
 
 int  game_init();

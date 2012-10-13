@@ -527,6 +527,6 @@ void link_erase(link_list_t* h, link_t* e) {
 }
 
 void link_clean(link_list_t* h) {
-	link_erase(h, h->f);
+	while (h->f) {link_erase(h, h->f);}
 	*h = (link_list_t){0, 0};
 }

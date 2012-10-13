@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "game.h"
+#include "creature.h"
 
 // FIXME: Shouldn't be here
 int arifunc (const char * x) {
@@ -18,13 +19,17 @@ void outfunc(int x) {
 }
 
 int main() {
+
 	mwInit();
 	mwSetAriFunc(arifunc);
 	mwSetOutFunc(outfunc);
 	game_init();
+	iface_setup();
 	game_loop();
 	game_clean();
 	mwSetOutFunc(outfunc);
 	mwTerm();
+
+//	creature_test();
 	return 0;
 }
