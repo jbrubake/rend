@@ -7,6 +7,7 @@ src/memwatch.c \
 src/containers.c \
 src/fov.c \
 src/game.c \
+src/creature.c \
 src/interface.c \
 src/map.c \
 src/main.c

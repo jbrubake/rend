@@ -7,6 +7,7 @@ typedef struct fraction_t {
 	int v;
 	int max;
 } fraction_t;
+#define FRACT(x, y) (struct fraction_t){x, y}
 
 typedef struct part_t {
 	ref_t ref;            // For ref-counting

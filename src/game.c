@@ -63,6 +63,7 @@ static void calc_occupancy() {
 static int priority_cmp(void* x, void* y) {
 	return ((event_t*)x)->priority - ((event_t*)y)->priority;
 }
+
 int game_init() {
 	kiss_seed(0);
 	iface_init();

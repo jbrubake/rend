@@ -446,7 +446,10 @@ void* reflist_remove (reflist_node_t** hln) {
 
 void reflist_clean (reflist_t* ll, free_func f) {
 	reflist_node_t * ln = ll->f;
-	while (ln) {if (f) {f(reflist_remove(&ln));}}
+	if (f)
+		while (ln) f(reflist_remove(&ln));
+	else 
+		while (ln) reflist_remove(&ln);
 }
 
 #ifdef UNITREFLIST
