@@ -43,7 +43,7 @@ static int player_move(void* event) {
 	ev->priority = game_d.time + 25; // Renew
 	heap_push(&game_d.pqueue, ev);
 	char buffer[56];
-	snprintf(buffer, sizeof(buffer), "Player moved to: %d %d\n", game_d.player.pos.x, game_d.player.pos.y);
+	snprintf(buffer, sizeof(buffer), "Player moved to: %d %d", game_d.player.pos.x, game_d.player.pos.y);
 	iface_printline(buffer);
 	return 0;
 }

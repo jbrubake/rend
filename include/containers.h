@@ -214,9 +214,9 @@ link_t* link_remove(link_t* el);
 #define link_init(ptype, elname) (link_list_t){0, 0, offsetof(ptype, elname)}
 void link_add(link_list_t* h, void* el);
 void link_erase(link_list_t* h, void* el);
-void link_clean(link_list_t* h);
+void link_clean(link_list_t* h, void (*free_func)(void*));
 
 void link_next(link_iter_t* i);
 void link_prev(link_iter_t* i);
-#define link_iter_first(h) (link_iter_t){(h)->f, (h)->f?((void*)((h)->f) - (h)->offset):0, (h)->offset}
-#define link_iter_last(h) (link_iter_t){(h)->l, (h)->l?((void*)((h)->l) - (h)->offset):0, (h)->offset}
+#define link_iter_first(h) (link_iter_t){(h)->f, (h)->f?(((void*)((h)->f)) - (h)->offset):0, (h)->offset}
+#define link_iter_last(h) (link_iter_t){(h)->l, (h)->l?(((void*)((h)->l)) - (h)->offset):0, (h)->offset}

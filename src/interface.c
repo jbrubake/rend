@@ -41,7 +41,7 @@ void iface_printline(const char * str) {
 
 	strcpy(line->msg, str);
 
-	link_add(&game_d.iface.log, &line->log_order);
+	link_add(&game_d.iface.log, line);
 }
 
 void iface_init(void) {
@@ -107,27 +107,31 @@ void iface_trace_pane(void) {
 	getmaxyx(win, Ys, Xs);
 	werase(win);
 	
-	link_t* iter = game_d.iface.log.l;
-	int i; for (i=0; i<Ys && iter; i++, iter = iter->p)
+	link_iter_t iter = link_iter_last(&game_d.iface.log);
+	int i; for (i=0; i<Ys && iter.el; i++, link_prev(&iter))
 	{
-		log_line_t* line = link_data(log_line_t, log_order, iter);
+		log_line_t* const line = iter.el;
 		mvwaddstr(win, Ys-i-1, 1, line->msg);
 	}
 }
-
+#include <stdio.h>
 void iface_cleanup(void) {
+	/*link_iter_t * iter = link_iter_first()
 	link_t *iter = 0, *last = game_d.iface.log.f;
 	while (last) {
 		iter = last->n;
 		free(link_data(log_line_t, log_order, last));
 		last = iter;
-	}
+	}*/
 
 	destroy_win(game_d.iface.bottom);
 	destroy_win(game_d.iface.right);
 	destroy_win(game_d.iface.main);
 
 	endwin();
+	// FIXME: This is a really stupid way to take care of this bug. Like... really really just extremely bad.
+	void dummy_free(void* x) {free(x);} // We need this because of memwatch.
+	link_clean(&game_d.iface.log, dummy_free);
 }
 
 void iface_swap() {
@@ -136,6 +140,8 @@ void iface_swap() {
 	wrefresh(game_d.iface.main);
 //	refresh();
 }
+
+// FIXME: This comment line is longer than 80 characters. You should probably delete this line. It's seriously long, and serves no purpose at all.
 int iface_next_key (void) {
 	int c = getch();
 	return c != ERR ? c : -1;

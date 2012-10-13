@@ -528,9 +528,12 @@ void link_erase(link_list_t* h, void* el) {
 	link_remove(e);
 }
 
-void link_clean(link_list_t* h) {
-	while (h->f) {link_erase(h, (void*)(h->f) - h->offset);}
-	*h = (link_list_t){0, 0};
+void link_clean(link_list_t* h, void (*free_func)(void*)) {
+	while (h->f) {
+		void * const k = (void*)h->f - h->offset;
+		link_erase(h, k);
+		if (free_func) {free_func(k);}
+	}
 }
 
 void link_next(link_iter_t* i)
