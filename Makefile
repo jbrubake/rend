@@ -45,5 +45,8 @@ test-reflist: src/memwatch.o
 
 .SUFFIXES: .c .o
 
+-include $(OBJECTS:.o=.d)
+
 .c.o:
 	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) -MM -MF $*.d -MT $*.o $*.c
