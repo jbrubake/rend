@@ -146,6 +146,11 @@ void   heap_clean   (heap_t* h);
 	// Clean the list:
 	reflist_clean(&list, free_func);
 	// Where free_func is intended to delete the objects, but might do something else.
+
+	// Copy a list into an (empty, potentially uninitialized) list:
+	reflist_copy(&destination_list, &source_list, copier_function)
+	// The copier function just has to provide the new data given the old data.
+	// It could be an identity function if you just want to copy the references, not the objects.
  */
 /////////////////////////////////////////////////////////////////////////
 
@@ -167,6 +172,7 @@ typedef struct reflist_t {
 reflist_node_t*  reflist_add     (reflist_t* ll,      void* data);
 reflist_node_t*  reflist_addafter(reflist_node_t* ln, void* data);
 reflist_node_t*  reflist_addprev (reflist_node_t* ln, void* data);
+reflist_t *reflist_copy(reflist_t* lln, reflist_t* ll, void* (copy_func)(void*));
 void*            reflist_remove  (reflist_node_t** hln);
 void             reflist_clean   (reflist_t* ll, free_func f);
 

@@ -2,6 +2,12 @@
 #include "memwatch.h"
 #include <string.h>
 
+#ifdef DEBUG
+#include <assert.h>
+#else
+#define assert(x)((void) 0)
+#endif
+
 // stk_t
 
 stk_t* stk_init(uint esize, uint isize) {
@@ -423,6 +429,20 @@ reflist_node_t*  reflist_addprev (reflist_node_t* ln, void* data) {
 	if (x->p) {x->p->n = x;}
 	if (ll->f == x->n) {ll->f = x;}
 	return x;
+}
+
+static void* reflist_identity(void* x) {return x;}
+reflist_t *reflist_copy(reflist_t* lln, reflist_t* ll, void* (*copy_func)(void*)) {
+	if (copy_func) {copy_func = reflist_identity;}
+	*lln = reflist_init();
+
+	reflist_node_t *iter = lln->f;
+	while (iter) {
+		reflist_add(lln, copy_func(iter->data));
+		iter = iter->n;
+	}
+
+	return lln;
 }
 
 void* reflist_remove (reflist_node_t** hln) {
