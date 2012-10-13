@@ -129,6 +129,26 @@ void   heap_clean   (heap_t* h);
 
 #endif
 
+/////////////////////////////////////////////////////////////////////////
+/*
+	Referenced linked list.
+
+	// Declare a list with:
+	reflist_t list = reflist_init();
+
+	// Add to the list:
+	reflist_add(&list, &object)
+
+	// Iterate the list:
+	reflist_node_t * iter = list.f;
+	while (iter) {do_something(iter->data); iter = iter->n;}
+
+	// Clean the list:
+	reflist_clean(&list, free_func);
+	// Where free_func is intended to delete the objects, but might do something else.
+ */
+/////////////////////////////////////////////////////////////////////////
+
 struct reflist_t;
 struct reflist_node_t;
 
@@ -143,7 +163,7 @@ typedef struct reflist_t {
 	reflist_node_t *f, *l;
 } reflist_t;
 
-#define reflist_init(esize) (reflist_t){0, 0}
+#define reflist_init() (reflist_t){0, 0}
 reflist_node_t*  reflist_add     (reflist_t* ll,      void* data);
 reflist_node_t*  reflist_addafter(reflist_node_t* ln, void* data);
 reflist_node_t*  reflist_addprev (reflist_node_t* ln, void* data);
