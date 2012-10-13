@@ -18,8 +18,12 @@ void outfunc(int x) {
 	o--;
 }
 
-int main() {
+typedef struct linkable_t {
+	int f;
+	link_t l;
+} linkable_t;
 
+int main() {
 	mwInit();
 	mwSetAriFunc(arifunc);
 	mwSetOutFunc(outfunc);

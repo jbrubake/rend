@@ -61,7 +61,7 @@ void iface_init(void) {
 	}
 
 	iface_t * const iface = &game_d.iface;
-	iface->log = link_init();
+	iface->log = link_init(log_line_t, log_order);
 	iface_printline("Hello from the event log!");
 }
 
@@ -107,7 +107,6 @@ void iface_trace_pane(void) {
 	getmaxyx(win, Ys, Xs);
 	werase(win);
 	
-//	mvwprintw(win, 1, 1, "Various output lines");
 	link_t* iter = game_d.iface.log.l;
 	int i; for (i=0; i<Ys && iter; i++, iter = iter->p)
 	{

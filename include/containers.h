@@ -152,16 +152,47 @@ void             reflist_clean   (reflist_t* ll, free_func f);
 
 /////////////////////////////////////////////////////////////////////////
 /*
-	Embedded linked list. You can just use:
-	link_addnext, link_addprev, link_remove, link_data by themselves, or additionally:
-	link_init
-	link_add
-	link_erase
+	Embedded linked list.
+
+	// Declare an object like this:
+	struct linkable_t {
+		int field1;
+		link_t link;
+		int field2;
+		link_t link2;
+		char field3[256];
+	} linkable={.link = {0}}, linkable2={.link = {0}};
+
+	// Then you can do this:
+	link_addnext(&linkable->link, &linkable2->link) // linkable2 now follows linkable in a list
+	// You will have to use link_data() to get at your data if you do it this way.
+
+	// Or make a list object explicitly:
+	link_list_t list = list_init(struct linkable_t, link2);
+	link_add(&list, &linkable)
+	link_add(&list, &linkable2)
+
+	// Then you can just iterate the list:
+	link_iter_t iter = link_iter_first(&list)
+	while (iter.el) {
+		do_something(iter.el)
+		link_next(&iter)
+	}
+
+	Advantages:
+		- Easier to flatten.
+		- Possibility of using static memory (as above... no calls to free() or malloc()!)
+		- Easily supports multiple lists with the same objects. Order by alphabetical and chronological order, for example.
  */
 /////////////////////////////////////////////////////////////////////////
 
+/*
+	This is the main linked list. f is the first element, l is the last, and offset is bookkeeping to find the parent object.
+ */
+
 typedef struct link_list_t {
 	struct link_t *f, *l;
+	size_t offset;
 } link_list_t;
 
 typedef struct link_t {
@@ -169,11 +200,23 @@ typedef struct link_t {
 	struct link_t * p;
 } link_t;
 
+typedef struct link_iter_t {
+	struct link_t * node;
+	void* el;
+	size_t offset;
+} link_iter_t;
+
 void link_addnext(link_t* root, link_t* node);
 void link_addprev(link_t* root, link_t* node);
 link_t* link_remove(link_t* el);
 #define link_data(ptype, elname, el) containerof(el, ptype, elname)
-#define link_init() (link_list_t){0, 0}
-void link_add(link_list_t* h, link_t* e);
-void link_erase(link_list_t* h, link_t* e);
+
+#define link_init(ptype, elname) (link_list_t){0, 0, offsetof(ptype, elname)}
+void link_add(link_list_t* h, void* el);
+void link_erase(link_list_t* h, void* el);
 void link_clean(link_list_t* h);
+
+void link_next(link_iter_t* i);
+void link_prev(link_iter_t* i);
+#define link_iter_first(h) (link_iter_t){(h)->f, (h)->f?((void*)((h)->f) - (h)->offset):0, (h)->offset}
+#define link_iter_last(h) (link_iter_t){(h)->l, (h)->l?((void*)((h)->l) - (h)->offset):0, (h)->offset}

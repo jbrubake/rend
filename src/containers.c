@@ -508,7 +508,8 @@ link_t* link_remove(link_t* el) {
 	return p?p:n;
 }
 
-void link_add(link_list_t* h, link_t* e) {
+void link_add(link_list_t* h, void* el) {
+	link_t * const e = el + h->offset;
 	if (!h->l) {
 		h->l = h->f = e;
 		return;
@@ -517,9 +518,10 @@ void link_add(link_list_t* h, link_t* e) {
 	h->l = e;
 }
 
-void link_erase(link_list_t* h, link_t* e) {
+void link_erase(link_list_t* h, void* el) {
+	link_t * const e = el + h->offset;
 	if (h->l == e) {
-		if (h->f == h->l) {*h = link_init();}
+		if (h->f == h->l) {h->f = h->l = 0;}
 		else {h->l = h->l->p;}
 	}
 	else if (h->f == e) {h->f = h->f->n;}
@@ -527,6 +529,18 @@ void link_erase(link_list_t* h, link_t* e) {
 }
 
 void link_clean(link_list_t* h) {
-	while (h->f) {link_erase(h, h->f);}
+	while (h->f) {link_erase(h, (void*)(h->f) - h->offset);}
 	*h = (link_list_t){0, 0};
+}
+
+void link_next(link_iter_t* i)
+{
+	i->node = i->node->n;
+	i->el = i->node?(void*)(i->node) - i->offset:0;
+}
+
+void link_prev(link_iter_t* i)
+{
+	i->node = i->node->p;
+	i->el = i->node?(void*)(i->node) - i->offset:0;
 }
