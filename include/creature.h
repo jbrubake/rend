@@ -1,7 +1,7 @@
+#include "game.h"
+
 #ifndef _CREATURE_H_
 #define _CREATURE_H_
-
-#include "game.h"
 
 typedef struct fraction_t {
 	int v;
@@ -26,14 +26,17 @@ typedef struct part_t {
 } part_t;
 
 typedef struct body_t {
+	ref_t ref;
 	part_t* rootpart;
 	fraction_t guard;
 	fraction_t concentration;
 	fraction_t stamina;
 } body_t;
+typedef body_t template_t;
 
 typedef struct creature_t
 {
+	ref_t ref;
 	uint type;
 	body_t *body;
 //	soul_t *soul;
@@ -44,6 +47,14 @@ enum {
 	CREATIRE_GOBLIN,
 };
 
-void creature_test();
+// Create a ref_t counted body from a template.
+body_t * body_from_template(template_t * t);
+void body_clean(body_t *b);
+
+// Some very temporary functions.
+void creature_test_init();
+creature_t *humanoid_generator(coord_t p);
+void creature_destroyer(creature_t *c);
+void creature_test_cleanup();
 
 #endif

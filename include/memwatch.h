@@ -580,6 +580,9 @@ char* mwStrdup( const char *, const char*, int );
 #define realloc(p,n)    mwRealloc(p,n,__FILE__,__LINE__)
 #define calloc(n,m)     mwCalloc(n,m,__FILE__,__LINE__)
 #define free(p)         mwFree(p,__FILE__,__LINE__)
+static inline void dummy_free(void* p) {free(p);}
+#undef free
+#define free dummy_free
 #define CHECK()         mwTest(__FILE__,__LINE__,MW_TEST_ALL)
 #define CHECK_THIS(n)   mwTest(__FILE__,__LINE__,n)
 #define CHECK_BUFFER(b) mwTestBuffer(__FILE__,__LINE__,b)

@@ -1,8 +1,8 @@
-#ifndef _INTERFACE_H_
-#define _INTERFACE_H_
-
 #include <curses.h>
 #include "game.h"
+
+#ifndef _INTERFACE_H_
+#define _INTERFACE_H_
 
 #define iface_color(fg, bg) ((fg<<3) + bg)
 

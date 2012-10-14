@@ -9,6 +9,7 @@ typedef struct coord_t {int x; int y;} coord_t;
 #include "interface.h"
 #include "fov.h"
 #include "kiss.h"
+#include "creature.h"
 
 #include "debug.h"
 
@@ -45,6 +46,10 @@ struct game_t {
 		coord_t k;
 		uint v;
 	} fov;
+	struct {
+		// This is where the "debug" variables and such go.
+		template_t humanoid;
+	} transient;
 	heap_t  pqueue;
 	reflist_t goblins;
 	actor_t player;

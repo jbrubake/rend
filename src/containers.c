@@ -433,10 +433,10 @@ reflist_node_t*  reflist_addprev (reflist_node_t* ln, void* data) {
 
 static void* reflist_identity(void* x) {return x;}
 reflist_t *reflist_copy(reflist_t* lln, reflist_t* ll, void* (*copy_func)(void*)) {
-	if (copy_func) {copy_func = reflist_identity;}
+	if (!copy_func) {copy_func = reflist_identity;}
 	*lln = reflist_init();
 
-	reflist_node_t *iter = lln->f;
+	reflist_node_t *iter = ll->f;
 	while (iter) {
 		reflist_add(lln, copy_func(iter->data));
 		iter = iter->n;

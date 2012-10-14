@@ -120,7 +120,40 @@ static void print_body(const body_t* b) {
 	printf("Stamina: "); print_fraction(b->stamina);
 }
 
-void creature_test() {
+// A helper method that clones whole part trees.
+static void* part_deep_copy(void *x) {
+	part_t * const p = x;
+	part_t * const pn = ref_alloc(sizeof(*pn));
+	*pn = *p; pn->ref.num = 1;
+	reflist_copy(&pn->children, &p->children, part_deep_copy);
+	reflist_copy(&pn->organs, &p->organs, part_deep_copy);
+	return pn;
+}
+
+static void part_deep_clean(void *x) {
+	part_t * const p = x;
+	reflist_clean(&p->children, part_deep_clean);
+	reflist_clean(&p->organs, part_deep_clean);
+	ref_free(p);
+}
+
+// There's only one template, but this function constructs real bodies from the monster library.
+body_t * body_from_template(template_t * t) {
+	assert(t->rootpart); // What kind of body template doesn't have at least the one part?
+	body_t * b = ref_alloc(sizeof(*b));
+	*b = *t;
+	b->ref.num = 1;
+	b->rootpart = part_deep_copy(t->rootpart);
+
+	return b;
+}
+
+void body_clean(body_t *b) {
+	part_deep_clean(b->rootpart);
+	ref_free(b);
+}
+
+void creature_test_init() {
 	int i;
 	for (i=0; i<sizeof(parts)/sizeof(*parts); i++) {
 		print_part(parts+i);
@@ -131,14 +164,31 @@ void creature_test() {
 	for (i=0; i<sizeof(contains)/sizeof(*contains); i++) {
 		reflist_add(&parts[contains[i].parent].organs, parts + contains[i].child);
 	}
-	body_t body;
-	body.rootpart = parts + PART_HEAD;
-	body.concentration = FRACT(10, 10);
-	body.stamina = FRACT(10, 10);
-	body.guard = FRACT(10, 10);
-	print_body(&body);
+	template_t * const body = &game_d.transient.humanoid;
+	body->rootpart = parts + PART_HEAD;
+	// FIXME: These calculations should really be done more at the creature level, not in the template, but for now it's fine.
+	body->concentration = FRACT(10, 10);
+	body->stamina = FRACT(10, 10);
+	body->guard = FRACT(10, 10);
+}
 
+// These functions are basically for debug, but the helpers might see reuse.
+creature_t *humanoid_generator(coord_t p) {
+	creature_t * goblin = ref_alloc(sizeof(*goblin));
+	goblin->body = body_from_template(&game_d.transient.humanoid);
+	print_body(goblin->body);
+	return goblin;
+}
+void creature_destroyer(creature_t *c) {
+	// hehe
+	body_clean(c->body);
+	// soul_clean(c->soul);
+}
+
+void creature_test_cleanup() {
+	int i;
 	for (i=0; i<sizeof(parts)/sizeof(*parts); i++) {
+		// All statically allocated parts. Just scrub the reflists.
 		reflist_clean(&parts[i].children, 0);
 		reflist_clean(&parts[i].organs, 0);
 	}

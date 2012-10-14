@@ -116,10 +116,7 @@ void iface_trace_pane(void) {
 }
 #include <stdio.h>
 void iface_cleanup(void) {
-	// FIXME: This is a really stupid way to take care of this bug. Like... really really just extremely bad.
-	// FIXME: Should probably just change memwatch's header files.
-	void dummy_free(void* x) {free(x);} // Necessary because of stupid memwatch. Should just use free directly.
-	link_clean(&game_d.iface.log, dummy_free);
+	link_clean(&game_d.iface.log, free);
 
 	destroy_win(game_d.iface.bottom);
 	destroy_win(game_d.iface.right);

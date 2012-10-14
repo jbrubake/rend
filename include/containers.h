@@ -84,6 +84,7 @@ void          llist_clean   (llist_t* ll);
  */
 //////////////////////////////////////////////////////////////////////////
 
+// Some functions currently assume that num exists and is the counter variable.
 typedef struct ref_t {int num;} ref_t;
 
 void* ref_alloc(int size);
