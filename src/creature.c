@@ -173,6 +173,7 @@ void creature_test_init() {
 }
 
 // FIXME: Remove this when we refactor eventmanager.h
+// Cos it's like... literally a straight copy, and that's unacceptable.
 enum {
 	GOBBO_REST,
 	PLAYER_REST,
@@ -190,7 +191,7 @@ creature_t *humanoid_generator(coord_t p, int priority) {
 	ev->event.type = GOBBO_REST;
 	ev->event.priority = priority; // Establish the time stamp of the creature's next action (could be now).
 	ev->creature = g;
-	reflist_add(&game_d.goblins, g); // FIXME: Should pass ref_copy(g) instead, but this makes for nicer cleanup.
+	reflist_add(&game_d.goblins, g); // FIXME: Should pass ref_copy(g) instead, but this makes for nicer cleanup. I know, I'm lazy.
 	heap_push(&game_d.pqueue, ev);
 	return g;
 }
