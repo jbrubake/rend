@@ -25,16 +25,9 @@ typedef struct event_t {
 	int priority;
 } event_t;
 
-typedef struct actor_t {
-	ref_t refc;
-	coord_t pos;
-	u8 symbol;
-	u8 color;
-} actor_t;
-
 typedef struct event_rest_t {
 	event_t event;
-	actor_t *creature;
+	creature_t *creature;
 } event_rest_t;
 
 // Global game data
@@ -52,7 +45,7 @@ struct game_t {
 	} transient;
 	heap_t  pqueue;
 	reflist_t goblins;
-	actor_t player;
+	creature_t player;
 	map_t *map;
 	iface_t iface;
 } game_d;

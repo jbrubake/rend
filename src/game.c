@@ -28,25 +28,13 @@ static keyhashnode_t keynodes[] = {
 };
 
 //////////////////////////
-static void gobbo_generate(coord_t p, int priority) {
-	actor_t* g  = ref_alloc(sizeof(*g));
-	event_rest_t* ev = ref_alloc(sizeof(*ev));
-	g->symbol = 'g';
-	g->color = iface_color(COLOR_WHITE, COLOR_BLACK);
-	g->pos = p;
-	ev->event.type = GOBBO_REST;
-	ev->event.priority = priority;
-	ev->creature = g; // FIXME: Could be ref-copied.
-	reflist_add(&game_d.goblins, g);
-	heap_push(&game_d.pqueue, ev);
-}
 static void calc_occupancy() {
 	map_t* const m = game_d.map;
 	int i; for (i=0; i<m->size[0]*m->size[1]; i++) {BIT_UNSET(m->tiles[i].flags, TILE_OCCUPIED);}
 	reflist_node_t *gn = game_d.goblins.f;
 	tile_t *t;
 	while (gn) {
-		const actor_t* const g = gn->data;
+		const creature_t* const g = gn->data;
 		t = map_get_tile(m, g->pos.x, g->pos.y);
 		if (t) {
 			BIT_SET(t->flags, TILE_OCCUPIED);
@@ -83,10 +71,10 @@ int game_init() {
 		heap_push(&game_d.pqueue, ev);
 	}
 
-	gobbo_generate((coord_t){ 6,  6}, 50);
-	gobbo_generate((coord_t){ 6, 11},100);
-	gobbo_generate((coord_t){11,  6},150);
-	gobbo_generate((coord_t){11, 11},200);
+	humanoid_generator((coord_t){ 6,  6}, 50);
+	humanoid_generator((coord_t){ 6, 11},100);
+	humanoid_generator((coord_t){11,  6},150);
+	humanoid_generator((coord_t){11, 11},200);
 	return 0;
 }
 
@@ -118,7 +106,7 @@ void game_clean() {
 	// Clean the goblin list
 	reflist_node_t* n = game_d.goblins.f;
 	while (n) {
-		ref_free(n->data);
+		creature_destroyer(n->data);
 		reflist_remove(&n);
 	}
 }

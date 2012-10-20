@@ -38,6 +38,12 @@ typedef struct creature_t
 {
 	ref_t ref;
 	uint type;
+
+	// Should these be separate? Do ghosts still have bodies?
+	coord_t pos;
+	u8 symbol;
+	u8 color;
+
 	body_t *body;
 //	soul_t *soul;
 } creature_t;
@@ -53,7 +59,7 @@ void body_clean(body_t *b);
 
 // Some very temporary functions.
 void creature_test_init();
-creature_t *humanoid_generator(coord_t p);
+creature_t *humanoid_generator(coord_t p, int priority);
 void creature_destroyer(creature_t *c);
 void creature_test_cleanup();
 

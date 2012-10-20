@@ -1,3 +1,6 @@
+// FIXME: What started as a quick fix is now permanent. Refactor this into a proper event dispatcher.
+// Monster AI should have its own file, as should player input handling. Some of this can be saved, but the file can't.
+
 static const coord_t where[] = {
 	{ 0, -1},
 	{ 0, +1},
@@ -11,7 +14,7 @@ static const coord_t where[] = {
 
 static int gobbo_move(void* event) {
 	event_rest_t * const ev = event;
-	actor_t * const g = ev->creature;
+	creature_t * const g = ev->creature;
 	const coord_t * const w = where + kiss_rand()%8;
 	tile_t* t = map_get_tile(game_d.map, g->pos.x + w->x, g->pos.y + w->y);
 	if ( t && !BIT_ISSET(t->flags, TILE_OCCUPIED) && BIT_ISSET(t->flags, TILE_WALKABLE) ) {

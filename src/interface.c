@@ -85,10 +85,10 @@ void iface_map_pane(map_t* m) {
 	}
 	reflist_node_t *g = game_d.goblins.f;
 	while (g) {
-		actor_t* const actor = g->data;
-		t = map_get_tile(game_d.map, actor->pos.x, actor->pos.y);
+		creature_t* const creature = g->data;
+		t = map_get_tile(game_d.map, creature->pos.x, creature->pos.y);
 		if (!t) {g = g->n; continue;}
-		if (BIT_ISSET(t->flags, TILE_VISIBLE)) {mvwaddch(win, actor->pos.y, actor->pos.x, actor->symbol | COLOR_PAIR(actor->color));}
+		if (BIT_ISSET(t->flags, TILE_VISIBLE)) {mvwaddch(win, creature->pos.y, creature->pos.x, creature->symbol | COLOR_PAIR(creature->color));}
 		g = g->n;
 	}
 }

@@ -172,17 +172,33 @@ void creature_test_init() {
 	body->guard = FRACT(10, 10);
 }
 
+// FIXME: Remove this when we refactor eventmanager.h
+enum {
+	GOBBO_REST,
+	PLAYER_REST,
+};
+
 // These functions are basically for debug, but the helpers might see reuse.
-creature_t *humanoid_generator(coord_t p) {
-	creature_t * goblin = ref_alloc(sizeof(*goblin));
-	goblin->body = body_from_template(&game_d.transient.humanoid);
-	print_body(goblin->body);
-	return goblin;
+creature_t *humanoid_generator(coord_t p, int priority) {
+	creature_t * g = ref_alloc(sizeof(*g));
+	g->body = body_from_template(&game_d.transient.humanoid);
+	print_body(g->body); // This seems to work well.
+	event_rest_t* ev = ref_alloc(sizeof(*ev));
+	g->symbol = 'g';
+	g->color = iface_color(COLOR_WHITE, COLOR_BLACK);
+	g->pos = p;
+	ev->event.type = GOBBO_REST;
+	ev->event.priority = priority; // Establish the time stamp of the creature's next action (could be now).
+	ev->creature = g;
+	reflist_add(&game_d.goblins, g); // FIXME: Should pass ref_copy(g) instead, but this makes for nicer cleanup.
+	heap_push(&game_d.pqueue, ev);
+	return g;
 }
 void creature_destroyer(creature_t *c) {
 	// hehe
 	body_clean(c->body);
 	// soul_clean(c->soul);
+	ref_free(c);
 }
 
 void creature_test_cleanup() {
