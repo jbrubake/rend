@@ -12,9 +12,11 @@ typedef struct log_line_t {
 } log_line_t;
 
 typedef struct iface_t {
-	WINDOW* main;
-	WINDOW* bottom;
-	WINDOW* right;
+	link_list_t displaylist; // A list of those windows currently displayed.
+	WINDOW* win_main;
+	WINDOW* win_trace;
+	WINDOW* win_creature;
+	WINDOW* win_health;
 	link_list_t log;
 	uint logN;
 } iface_t;

@@ -85,6 +85,7 @@ int game_loop() {
 		iface_trace_pane();
 		iface_info_pane();
 		iface_map_pane(game_d.map);
+//		iface_health_pane();
 		iface_swap();
 
 		event_t* ev = heap_pop(&game_d.pqueue);

@@ -74,9 +74,14 @@ void iface_init(void) {
 	iface_printline("Hello from the event log!");
 }
 
+// This is a full screen window. It should use the full screen!
+void iface_health_pane() {
+	clear();
+}
+
 #define COORD2INDEX(x, y, xmax) ((x) + (xmax) * (y))
 void iface_map_pane(map_t* m) {
-	WINDOW * const win = game_d.iface.main;
+	WINDOW * const win = game_d.iface.win_main;
 
 	int i, j; tile_t* t;
 	for (i=0; i<m->size[0]; i++) {
@@ -104,14 +109,14 @@ void iface_map_pane(map_t* m) {
 
 
 void iface_info_pane(void) {
-	WINDOW * const win = game_d.iface.right;
+	WINDOW * const win = game_d.iface.win_creature;
 
 	mvwprintw(win, 1, 1, "Character");
 	mvwprintw(win, 2, 1, "information");
 }
 
 void iface_trace_pane(void) {
-	WINDOW * const win = game_d.iface.bottom;
+	WINDOW * const win = game_d.iface.win_trace;
 	int Xs, Ys;
 	getmaxyx(win, Ys, Xs);
 	werase(win);
@@ -127,17 +132,17 @@ void iface_trace_pane(void) {
 void iface_cleanup(void) {
 	link_clean(&game_d.iface.log, free);
 
-	destroy_win(game_d.iface.bottom);
-	destroy_win(game_d.iface.right);
-	destroy_win(game_d.iface.main);
+	destroy_win(game_d.iface.win_trace);
+	destroy_win(game_d.iface.win_creature);
+	destroy_win(game_d.iface.win_main);
 
 	endwin();
 }
 
 void iface_swap() {
-	wrefresh(game_d.iface.bottom);
-	wrefresh(game_d.iface.right);
-	wrefresh(game_d.iface.main);
+	wrefresh(game_d.iface.win_trace);
+	wrefresh(game_d.iface.win_creature);
+	wrefresh(game_d.iface.win_main);
 //	refresh();
 }
 
@@ -149,7 +154,7 @@ int iface_next_key (void) {
 
 void iface_setup(void) {
 	resize_term(25, 80);
-	game_d.iface.bottom = create_newwin( 5, 80, 20,  0);
-	game_d.iface.right  = create_newwin(20, 15,  0, 65);
-	game_d.iface.main   = create_newwin(20, 65,  0,  0);
+	game_d.iface.win_trace    = create_newwin( 5, 80, 20,  0);
+	game_d.iface.win_creature = create_newwin(20, 15,  0, 65);
+	game_d.iface.win_main     = create_newwin(20, 65,  0,  0);
 }
