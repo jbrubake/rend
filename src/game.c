@@ -58,7 +58,7 @@ int game_init() {
 	uint i; for (i=0; i<sizeof(keynodes)/sizeof(*keynodes); i++) {
 		key_add(keynodes + i);
 	}
-	game_d.map = map_init(80, 20);
+	game_d.map = map_init(65, 20);
 	game_d.player.pos = (coord_t){1,1};
 
 	game_d.pqueue = heap_init(priority_cmp);
