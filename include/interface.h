@@ -16,6 +16,7 @@ typedef struct iface_t {
 	WINDOW* bottom;
 	WINDOW* right;
 	link_list_t log;
+	uint logN;
 } iface_t;
 
 void iface_init     (void);

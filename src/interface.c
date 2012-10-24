@@ -35,13 +35,21 @@ static void destroy_win(WINDOW *local_win)
 }
 
 void iface_printline(const char * str) {
+	iface_t * const iface = &game_d.iface;
 	size_t bsize = strlen(str);
 	log_line_t *line = malloc(sizeof(*line) + bsize + 1);
 	line->log_order = (link_t){0};
 
 	strcpy(line->msg, str);
 
-	link_add(&game_d.iface.log, line);
+	link_add(&iface->log, line);
+	iface->logN++;
+	if (iface->logN > 20) {
+		line = link_data(log_line_t, log_order, iface->log.f);
+		link_erase(&iface->log, line);
+		free(line);
+		iface->logN--;
+	}
 }
 
 void iface_init(void) {
@@ -62,6 +70,7 @@ void iface_init(void) {
 
 	iface_t * const iface = &game_d.iface;
 	iface->log = link_init(log_line_t, log_order);
+	iface->logN = 0;
 	iface_printline("Hello from the event log!");
 }
 
