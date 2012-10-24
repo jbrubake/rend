@@ -115,9 +115,6 @@ static void print_parttree(const part_t* p, int depth) {
 
 static void print_body(const body_t* b) {
 	print_parttree(b->rootpart, 0);
-	printf("Guard: "); print_fraction(b->guard);
-	printf("Concentration: "); print_fraction(b->concentration);
-	printf("Stamina: "); print_fraction(b->stamina);
 }
 
 // A helper method that clones whole part trees.
@@ -153,6 +150,17 @@ void body_clean(body_t *b) {
 	ref_free(b);
 }
 
+// FIXME: Remove this when we refactor eventmanager.h
+// Cos it's like... literally a straight copy, and that's unacceptable.
+enum {
+	GOBBO_REST,
+	PLAYER_REST,
+};
+
+//////////////////////////////////////////////////////////////////////
+// These functions are temporary
+//////////////////////////////////////////////////////////////////////
+
 void creature_test_init() {
 	int i;
 	for (i=0; i<sizeof(parts)/sizeof(*parts); i++) {
@@ -167,27 +175,31 @@ void creature_test_init() {
 	template_t * const body = &game_d.transient.humanoid;
 	body->rootpart = parts + PART_HEAD;
 	// FIXME: These calculations should really be done more at the creature level, not in the template, but for now it's fine.
-	body->concentration = FRACT(10, 10);
-	body->stamina = FRACT(10, 10);
-	body->guard = FRACT(10, 10);
 }
 
-// FIXME: Remove this when we refactor eventmanager.h
-// Cos it's like... literally a straight copy, and that's unacceptable.
-enum {
-	GOBBO_REST,
-	PLAYER_REST,
-};
+void creature_test_cleanup() {
+	int i;
+	for (i=0; i<sizeof(parts)/sizeof(*parts); i++) {
+		// All statically allocated parts. Just scrub the reflists.
+		reflist_clean(&parts[i].children, 0);
+		reflist_clean(&parts[i].organs, 0);
+	}
+}
 
-// These functions are basically for debug, but the helpers might see reuse.
 creature_t *humanoid_generator(coord_t p, int priority) {
 	creature_t * g = ref_alloc(sizeof(*g));
 	g->body = body_from_template(&game_d.transient.humanoid);
-	print_body(g->body); // This seems to work well.
+	print_body(g->body);
 	event_rest_t* ev = ref_alloc(sizeof(*ev));
 	g->symbol = 'g';
 	g->color = iface_color(COLOR_WHITE, COLOR_BLACK);
 	g->pos = p;
+	g->concentration = FRACT(10, 10);
+	g->stamina = FRACT(10, 10);
+	g->guard = FRACT(10, 10);
+//	printf("Guard: "); print_fraction(g->guard);
+//	printf("Concentration: "); print_fraction(g->concentration);
+//	printf("Stamina: "); print_fraction(g->stamina);
 	ev->event.type = GOBBO_REST;
 	ev->event.priority = priority; // Establish the time stamp of the creature's next action (could be now).
 	ev->creature = g;
@@ -200,13 +212,4 @@ void creature_destroyer(creature_t *c) {
 	body_clean(c->body);
 	// soul_clean(c->soul);
 	ref_free(c);
-}
-
-void creature_test_cleanup() {
-	int i;
-	for (i=0; i<sizeof(parts)/sizeof(*parts); i++) {
-		// All statically allocated parts. Just scrub the reflists.
-		reflist_clean(&parts[i].children, 0);
-		reflist_clean(&parts[i].organs, 0);
-	}
 }

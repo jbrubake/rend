@@ -25,12 +25,19 @@ typedef struct part_t {
 	reflist_t organs;     // Any organs found internal to the part.
 } part_t;
 
+typedef struct soul_t {
+	u8 intelligence;
+	u8 will;
+	u8 charisma;
+} soul_t;
+
 typedef struct body_t {
 	ref_t ref;
 	part_t* rootpart;
-	fraction_t guard;
-	fraction_t concentration;
-	fraction_t stamina;
+
+	u8 strength;
+	u8 endurance;
+	u8 agility;
 } body_t;
 typedef body_t template_t;
 
@@ -43,6 +50,11 @@ typedef struct creature_t
 	coord_t pos;
 	u8 symbol;
 	u8 color;
+
+	// Dynamic attributes
+	fraction_t guard;
+	fraction_t concentration;
+	fraction_t stamina;
 
 	body_t *body;
 //	soul_t *soul;
@@ -59,8 +71,8 @@ void body_clean(body_t *b);
 
 // Some very temporary functions.
 void creature_test_init();
+void creature_test_cleanup();
 creature_t *humanoid_generator(coord_t p, int priority);
 void creature_destroyer(creature_t *c);
-void creature_test_cleanup();
 
 #endif
