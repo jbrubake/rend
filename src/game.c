@@ -4,27 +4,31 @@
 #include "eventmanager.h"
 #include "control_functions.h"
 
+// HACK: Needed to force kk into being an l-value.
+// FIXME: Probably not needed in the long run.
+#define KTR(kk) &(struct {int k;}){kk}
+
 static keyhashnode_t keynodes[] = {
-	KEY_DEF(KEY_A1      , move_player),
-	KEY_DEF(KEY_A2      , move_player),
-	KEY_DEF(KEY_A3      , move_player),
-	KEY_DEF(KEY_B1      , move_player),
-	KEY_DEF(KEY_B2      , move_player),
-	KEY_DEF(KEY_B3      , move_player),
-	KEY_DEF(KEY_C1      , move_player),
-	KEY_DEF(KEY_C2      , move_player),
-	KEY_DEF(KEY_C3      , move_player),
-	KEY_DEF(KEY_DOWN    , move_player),
-	KEY_DEF(KEY_UP      , move_player),
-	KEY_DEF(KEY_LEFT    , move_player),
-	KEY_DEF(KEY_RIGHT   , move_player),
-	KEY_DEF('+'         , toggle_view),
-	KEY_DEF('k'         , toggle_fov_debug),
-	KEY_DEF('a'         , move_fov_debug),
-	KEY_DEF('d'         , move_fov_debug),
-	KEY_DEF('w'         , move_fov_debug),
-	KEY_DEF('s'         , move_fov_debug),
-	KEY_DEF('z'         , nview_debug),
+	KEY_DEF(KEY_A1      , move_player,      KTR(KEY_A1)),
+	KEY_DEF(KEY_A2      , move_player,      KTR(KEY_A2)),
+	KEY_DEF(KEY_A3      , move_player,      KTR(KEY_A3)),
+	KEY_DEF(KEY_B1      , move_player,      KTR(KEY_B1)),
+	KEY_DEF(KEY_B2      , move_player,      KTR(KEY_B2)),
+	KEY_DEF(KEY_B3      , move_player,      KTR(KEY_B3)),
+	KEY_DEF(KEY_C1      , move_player,      KTR(KEY_C1)),
+	KEY_DEF(KEY_C2      , move_player,      KTR(KEY_C2)),
+	KEY_DEF(KEY_C3      , move_player,      KTR(KEY_C3)),
+	KEY_DEF(KEY_DOWN    , move_player,      KTR(KEY_DOWN)),
+	KEY_DEF(KEY_UP      , move_player,      KTR(KEY_UP)),
+	KEY_DEF(KEY_LEFT    , move_player,      KTR(KEY_LEFT)),
+	KEY_DEF(KEY_RIGHT   , move_player,      KTR(KEY_RIGHT)),
+	KEY_DEF('+'         , toggle_view,      KTR('+')),
+	KEY_DEF('k'         , toggle_fov_debug, KTR('k')),
+	KEY_DEF('a'         , move_fov_debug,   KTR('a')),
+	KEY_DEF('d'         , move_fov_debug,   KTR('d')),
+	KEY_DEF('w'         , move_fov_debug,   KTR('w')),
+	KEY_DEF('s'         , move_fov_debug,   KTR('s')),
+	KEY_DEF('z'         , nview_debug,      KTR('z')),
 };
 
 //////////////////////////

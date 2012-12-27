@@ -1,4 +1,5 @@
-static int move_player(uint k) {
+static int move_player(void * ctx) {
+	int k = *(int*)ctx;
 	const static coord_t m[] = {
 		{-1,-1},
 		{ 0,-1},
@@ -37,14 +38,15 @@ static int move_player(uint k) {
 	return 0;
 }
 
-static int toggle_view(uint k) {game_d.view++; return 0;}
-static int toggle_fov_debug(uint k) {
+static int toggle_view(void * ctx) {game_d.view++; return 0;}
+static int toggle_fov_debug(void * ctx) {
 	game_d.fov.mode = !game_d.fov.mode;
 	game_d.fov.k = game_d.player.pos;
 	game_d.fov.v = 0;
 	return 0;
 }
-static int move_fov_debug  (uint k) {
+static int move_fov_debug  (void * ctx) {
+	int k = *(int*)ctx;
 	switch(k) {
 		case 'a':
 			game_d.fov.k.x--;
@@ -62,7 +64,7 @@ static int move_fov_debug  (uint k) {
 	game_d.fov.v = 0;
 	return 0;
 }
-static int nview_debug(uint k) {
+static int nview_debug(void * ctx) {
 	game_d.fov.v++;
 	return 0;
 }
