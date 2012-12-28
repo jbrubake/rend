@@ -29,72 +29,19 @@ enum {
 	PART_LEFTLUNG,
 	PART_RIGHTLUNG,
 	PART_SPLEEN,
-	PART_GUT
-};
-#define PART(nm, hlth, nec, imp, pn, bld) {.name = nm, .vitality={hlth, hlth}, .necessary=nec, .importance=imp, .pain=pn, .bleeds=bld}
-static part_t parts[] = {
-	// PART(Name, health, necessary, importance level, pain, bleeding)
-	PART("Head",         16, 0, 0,  8, 4),
-	PART("Neck",         12, 0, 0,  8, 16),
-	PART("Chest",        64, 0, 0,  8, 4),
-	PART("Abdomen",      64, 0, 0,  8, 4),
-	PART("Pelvis",       48, 0, 0,  8, 4),
-	PART("Left Leg",     32, 0, 0,  8, 6),
-	PART("Right Leg",    32, 0, 0,  8, 6),
-	PART("Left Arm",     24, 0, 0,  8, 6),
-	PART("Right Arm",    24, 0, 0,  8, 6),
-	PART("Left Hand",     8, 0, 0,  8, 2),
-	PART("Right Hand",    8, 0, 0,  8, 2),
+	PART_GUT,
 
-	PART("Skull",        12, 0, 1, 16,  0),
-	PART("Upper Spine",   8, 0, 1, 12,  0),
-	PART("Lower Spine",   8, 0, 1, 12,  0),
-	PART("Ribs",         12, 0, 1, 16,  0),
-	PART("Pelvic Bone",  20, 0, 1, 12,  0),
-	PART("Left Femur",   20, 0, 1, 16, 16),
-	PART("Right Femur",  20, 0, 1, 16, 16),
-
-	PART("Brain",         8, 1, 1,  0,  4),
-	PART("Heart",        12, 1, 1,  8, 32),
-	PART("Left Lung",    12, 1, 1,  8,  4),
-	PART("Right Lung",   12, 1, 1,  8,  4),
-	PART("Spleen",       12, 0, 1,  8, 24),
-	PART("Gut",          24, 0, 1, 12, 16),
-};
-static struct {int parent; int child;} connections[] = {
-	// Main body bits
-	{PART_HEAD, PART_NECK},
-	{PART_NECK, PART_CHEST},
-	{PART_CHEST, PART_ABDOMEN},
-	{PART_ABDOMEN, PART_PELVIS},
-	{PART_PELVIS, PART_LEFTLEG},
-	{PART_PELVIS, PART_RIGHTLEG},
-
-	// Right arm
-	{PART_CHEST, PART_RIGHTARM},
-	{PART_RIGHTARM, PART_RIGHTHAND},
-
-	// Left arm
-	{PART_CHEST, PART_LEFTARM},
-	{PART_LEFTARM, PART_LEFTHAND},
+    PART_NUM
 };
 
-static struct {int parent; int child;} contains[] = {
-	// Organs
-	{PART_SKULL, PART_BRAIN},
-	{PART_CHEST, PART_HEART},
-	{PART_CHEST, PART_LEFTLUNG},
-	{PART_CHEST, PART_RIGHTLUNG},
-	{PART_ABDOMEN, PART_SPLEEN},
-	{PART_ABDOMEN, PART_GUT},
-};
-
-static void print_fraction(fraction_t frac) {
+static inline void print_fraction(fraction_t frac) {
 	printf("%d/%d\n", frac.v, frac.max);
 }
 
-static void print_part(const part_t* p) {
-	printf("%s: (%d/%d) [", p->name, p->vitality.v, p->vitality.max);
+static void print_part(entity_id part) {
+    name_t* const n = component_get(part, CPT_NAME); assert(n);
+    part_t* const p = component_get(part, CPT_PART); assert(p);
+	printf("%s: (%d/%d) [", n->str, p->vitality.v, p->vitality.max);
 	int k=0;
 	if (p->necessary)   {printf(k?" %s":"%s",               "necessary"); k++;}
 	if (!p->importance) {printf(k?" %s":"%s",               "important"); k++;}
@@ -103,51 +50,80 @@ static void print_part(const part_t* p) {
 	printf("]\n");
 }
 
-static void print_parttree(const part_t* p, int depth) {
+static void print_parttree(entity_id part, int depth) {
+    name_t * const nm = component_get(part, CPT_NAME); assert(nm);
+    part_t * const p  = component_get(part, CPT_PART); assert(p);
 	int i; for (i=0; i<depth; i++) {printf("\t");}
-	printf(depth?"->%s\n":"%s\n", p->name);
-	reflist_node_t* n;
-	n = p->organs.f;
-	while (n) {print_parttree(n->data, depth+1); n = n->n;}
-	n = p->children.f;
-	while (n) {print_parttree(n->data, depth+1); n = n->n;}
+	printf(depth?"->%s\n":"%s\n", nm->str);
+	entity_l n;
+	n = p->organs;
+	while (n) {print_parttree(n->el, depth+1); n = n->n;}
+	n = p->children;
+	while (n) {print_parttree(n->el, depth+1); n = n->n;}
 }
 
-static void print_body(const body_t* b) {
+static void print_body(entity_id ent) {
+    body_t* const b = component_get(ent, CPT_BODY);
+    assert(b && "No body component in entity passed to print_body()");
 	print_parttree(b->rootpart, 0);
 }
 
 // A helper method that clones whole part trees.
-static void* part_deep_copy(void *x) {
-	part_t * const p = x;
-	part_t * const pn = ref_alloc(sizeof(*pn));
-	*pn = *p; pn->ref.num = 1;
-	reflist_copy(&pn->children, &p->children, part_deep_copy);
-	reflist_copy(&pn->organs, &p->organs, part_deep_copy);
-	return pn;
-}
+static entity_id part_deep_copy(entity_id p) {
+    entity_id part = entity_create();
+    { // Copy the name
+        name_t * const oldname = component_get(p, CPT_NAME); assert(oldname);
+        name_t * const newname = component_attach(part, CPT_NAME); assert(newname);
+        strcpy(newname->str, oldname->str);
+    }
 
-static void part_deep_clean(void *x) {
-	part_t * const p = x;
-	reflist_clean(&p->children, part_deep_clean);
-	reflist_clean(&p->organs, part_deep_clean);
-	ref_free(p);
+    // Copy the part information
+    part_t * const oldpart = component_get(p, CPT_PART); assert(oldpart);
+    part_t * const newpart = component_attach(part, CPT_PART);
+    component_t base = newpart->base;
+    *newpart = *oldpart;
+    newpart->children = 0;
+    newpart->organs = 0;
+    newpart->base = base;
+
+    // Copy the list of child parts recursively.
+    entity_l it;
+    for (it = oldpart->children; it; it = it->n) {
+        entity_add( &newpart->children, part_deep_copy(it->el) );
+    }
+    for (it = oldpart->organs; it; it = it->n) {
+        entity_add( &newpart->organs, part_deep_copy(it->el) );
+    }
+	return part;
 }
 
 // There's only one template, but this function constructs real bodies from the monster library.
-body_t * body_from_template(template_t * t) {
-	assert(t->rootpart); // What kind of body template doesn't have at least the one part?
-	body_t * b = ref_alloc(sizeof(*b));
-	*b = *t;
-	b->ref.num = 1;
-	b->rootpart = part_deep_copy(t->rootpart);
-
-	return b;
+void body_from_template(body_t * b, entity_id t) {
+    body_t * template = component_get(t, CPT_BODY); assert(template);
+	assert(template->rootpart && "No body in template"); // What kind of body template doesn't have at least the one part?
+    {
+        component_t base = b->base;
+        *b = *template;
+        b->base = base;
+    }
+	b->rootpart = part_deep_copy(template->rootpart);
 }
 
-void body_clean(body_t *b) {
-	part_deep_clean(b->rootpart);
-	ref_free(b);
+static void part_clean(component_t* part) {
+    part_t * const p = (part_t *)part;
+    while (p->children) {
+        entity_destroy(p->children->el);
+        entity_del(&p->children);
+    }
+    while (p->organs) {
+        entity_destroy(p->organs->el);
+        entity_del(&p->organs);
+    }
+}
+
+static void body_clean(component_t *x) {
+    body_t * const b = (body_t*)x;
+	entity_destroy(b->rootpart);
 }
 
 // FIXME: Remove this when we refactor eventmanager.h
@@ -161,55 +137,148 @@ enum {
 // These functions are temporary
 //////////////////////////////////////////////////////////////////////
 
+static void part_create(entity_id ent, const char *nm, fraction_t vitality, int necessary, int importance, int pain, int bleeds, int size) {
+    name_t * const name = component_attach(ent, CPT_NAME);
+    part_t * const part = component_attach(ent, CPT_PART);
+
+    strncpy(name->str, nm, NAME_SIZE);
+    *part = (part_t){
+        .base       = part->base,
+        .vitality   = vitality,
+        .necessary  = necessary,
+        .importance = importance,
+        .pain       = pain,
+        .bleeds     = bleeds,
+        .size       = size
+    };
+}
+
+static void part_relate(int rtype, entity_id parent, entity_id child) {
+    part_t * const p = component_get(parent, CPT_PART); assert(p);
+
+    entity_add(rtype ? &p->organs : &p->children, child);
+}
+
 void creature_test_init() {
-	int i;
-	for (i=0; i<sizeof(parts)/sizeof(*parts); i++) {
-		print_part(parts+i);
-	}
-	for (i=0; i<sizeof(connections)/sizeof(*connections); i++) {
-		reflist_add(&parts[connections[i].parent].children, parts + connections[i].child);
-	}
-	for (i=0; i<sizeof(contains)/sizeof(*contains); i++) {
-		reflist_add(&parts[contains[i].parent].organs, parts + contains[i].child);
-	}
-	template_t * const body = &game_d.transient.humanoid;
-	body->rootpart = parts + PART_HEAD;
-	// FIXME: These calculations should really be done more at the creature level, not in the template, but for now it's fine.
+    entity_id parts[PART_NUM];
+    int i;
+    for (i=0; i<PART_NUM; i++) {parts[i] = entity_create();}
+
+#define PART(part, name, health, ...) part_create(parts[part], name, (fraction_t){health, health}, __VA_ARGS__)
+#define CONNECTED(parent, child) part_relate(0, parts[parent], parts[child])
+#define CONTAINS(parent, child) part_relate(1, parts[parent], parts[child])
+
+	// PART(Name, health, necessary, importance level, pain, bleeding)
+	PART(PART_HEAD,       "Head",         16, 0, 0,  8, 4,   8);
+	PART(PART_NECK,       "Neck",         12, 0, 0,  8, 16,  8);
+	PART(PART_CHEST,      "Chest",        64, 0, 0,  8, 4,  64);
+	PART(PART_ABDOMEN,    "Abdomen",      64, 0, 0,  8, 4,  64);
+	PART(PART_PELVIS,     "Pelvis",       48, 0, 0,  8, 4,  16);
+	PART(PART_LEFTLEG,    "Left Leg",     32, 0, 0,  8, 6,  16);
+	PART(PART_RIGHTLEG,   "Right Leg",    32, 0, 0,  8, 6,  16);
+	PART(PART_LEFTARM,    "Left Arm",     24, 0, 0,  8, 6,  12);
+	PART(PART_RIGHTARM,   "Right Arm",    24, 0, 0,  8, 6,  12);
+	PART(PART_LEFTHAND,   "Left Hand",     8, 0, 0,  8, 2,   6);
+	PART(PART_RIGHTHAND,  "Right Hand",    8, 0, 0,  8, 2,   6);
+
+	PART(PART_SKULL,      "Skull",        12, 0, 1, 16,  0,  4);
+	PART(PART_UPPERSPINE, "Upper Spine",   8, 0, 1, 12,  0,  4);
+	PART(PART_LOWERSPINE, "Lower Spine",   8, 0, 1, 12,  0,  6);
+	PART(PART_RIBS,       "Ribs",         12, 0, 1, 16,  0, 32);
+	PART(PART_PELVICBONE, "Pelvic Bone",  20, 0, 1, 12,  0, 12);
+	PART(PART_LEFTFEMUR,  "Left Femur",   20, 0, 1, 16, 16, 12);
+	PART(PART_RIGHTFEMUR, "Right Femur",  20, 0, 1, 16, 16, 12);
+
+	PART(PART_BRAIN,      "Brain",         8, 1, 1,  0,  4,  4);
+	PART(PART_HEART,      "Heart",        12, 1, 1,  8, 32,  4);
+	PART(PART_LEFTLUNG,   "Left Lung",    12, 1, 1,  8,  4,  4);
+	PART(PART_RIGHTLUNG,  "Right Lung",   12, 1, 1,  8,  4,  4);
+	PART(PART_SPLEEN,     "Spleen",       12, 0, 1,  8, 24,  4);
+	PART(PART_GUT,        "Gut",          24, 0, 1, 12, 16,  8);
+
+    // Main Body
+    CONNECTED(PART_HEAD, PART_NECK);
+    CONNECTED(PART_NECK, PART_CHEST);
+    CONNECTED(PART_CHEST, PART_ABDOMEN);
+    CONNECTED(PART_ABDOMEN, PART_PELVIS);
+    CONNECTED(PART_PELVIS, PART_LEFTLEG);
+	CONNECTED(PART_PELVIS, PART_RIGHTLEG);
+
+    // Right arm
+	CONNECTED(PART_CHEST, PART_RIGHTARM);
+	CONNECTED(PART_RIGHTARM, PART_RIGHTHAND);
+
+	// Left arm
+	CONNECTED(PART_CHEST, PART_LEFTARM);
+	CONNECTED(PART_LEFTARM, PART_LEFTHAND);
+
+	// Organs
+	CONTAINS(PART_SKULL, PART_BRAIN);
+	CONTAINS(PART_CHEST, PART_HEART);
+	CONTAINS(PART_CHEST, PART_LEFTLUNG);
+	CONTAINS(PART_CHEST, PART_RIGHTLUNG);
+	CONTAINS(PART_ABDOMEN, PART_SPLEEN);
+	CONTAINS(PART_ABDOMEN, PART_GUT);
+
+    // Print results
+    for (i=0; i<sizeof(parts)/sizeof(*parts); i++) {print_part(parts[i]);}
+	game_d.transient.humanoid = entity_create();
+    body_t * const body = component_attach(game_d.transient.humanoid, CPT_BODY);
+	body->rootpart = parts[PART_HEAD];
+    body->strength = body->endurance = body->agility = 65;
 }
 
-void creature_test_cleanup() {
-	int i;
-	for (i=0; i<sizeof(parts)/sizeof(*parts); i++) {
-		// All statically allocated parts. Just scrub the reflists.
-		reflist_clean(&parts[i].children, 0);
-		reflist_clean(&parts[i].organs, 0);
-	}
-}
+void creature_test_cleanup() {entity_destroy(game_d.transient.humanoid);}
 
-creature_t *humanoid_generator(coord_t p, int priority) {
-	creature_t * g = ref_alloc(sizeof(*g));
-	g->body = body_from_template(&game_d.transient.humanoid);
-	print_body(g->body);
-	event_rest_t* ev = ref_alloc(sizeof(*ev));
-	g->symbol = 'g';
-	g->color = iface_color(COLOR_WHITE, COLOR_BLACK);
-	g->pos = p;
+creature_t *humanoid_generator(const char * name, coord_t p, int priority) {
+    // Create the humanoid.
+    entity_id humanoid = entity_create();
+
+    // Give the humanoid a name.
+    {
+        name_t * const nm = component_attach(humanoid, CPT_NAME);
+        strncpy(nm->str, name, NAME_SIZE);
+    }
+
+    // Give the humanoid a body.
+    body_t * const body = component_attach(humanoid, CPT_BODY);
+	body_from_template(body, game_d.transient.humanoid);
+	print_body(humanoid);
+
+    // Make it into a creature.
+	creature_t * const g = component_attach(humanoid, CPT_CREATURE);
 	g->concentration = FRACT(10, 10);
 	g->stamina = FRACT(10, 10);
 	g->guard = FRACT(10, 10);
 //	printf("Guard: "); print_fraction(g->guard);
 //	printf("Concentration: "); print_fraction(g->concentration);
 //	printf("Stamina: "); print_fraction(g->stamina);
+
+    // Give the humanoid a position.
+    {
+        pos_t * const pos = component_attach(humanoid, CPT_POS);
+        pos->pos = p;
+    }
+
+    {
+        symbol_t * const sym = component_attach(humanoid, CPT_SYMBOL);
+        sym->symbol = 'g';
+        sym->color = iface_color(COLOR_WHITE, COLOR_BLACK);
+    }
+
+    // Put in a rest event.
+    // FIXME: Should use a controller component
+	event_rest_t* ev = ref_alloc(sizeof(*ev));
 	ev->event.type = GOBBO_REST;
 	ev->event.priority = priority; // Establish the time stamp of the creature's next action (could be now).
-	ev->creature = g;
-	reflist_add(&game_d.goblins, g); // FIXME: Should pass ref_copy(g) instead, but this makes for nicer cleanup. I know, I'm lazy.
+	ev->creature = humanoid;
+	entity_add(&game_d.goblins, humanoid);
 	heap_push(&game_d.pqueue, ev);
 	return g;
 }
-void creature_destroyer(creature_t *c) {
-	// hehe
-	body_clean(c->body);
-	// soul_clean(c->soul);
-	ref_free(c);
-}
+
+// List of component managers related to creatures.
+manager_t cpt_part = {.type = CPT_PART, .size = sizeof(part_t), .cpt_destroy = part_clean};
+manager_t cpt_soul = {.type = CPT_SOUL, .size = sizeof(soul_t)};
+manager_t cpt_body = {.type = CPT_BODY, .size = sizeof(body_t), .cpt_destroy = body_clean};
+manager_t cpt_creature = {.type = CPT_CREATURE, .size = sizeof(creature_t)};

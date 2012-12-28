@@ -2,6 +2,8 @@ CC=gcc
 CFLAGS=-Iinclude -DWINDOWS -DDEBUG -DMEMWATCH -c -Wall -g
 LDFLAGS=-static-libgcc -Llib -lpdcurses -lmingw32 -mconsole
 SOURCES= \
+src/generic.c \
+src/entities.c \
 src/kiss.c \
 src/memwatch.c \
 src/containers.c \

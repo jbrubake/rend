@@ -51,8 +51,10 @@ static inline void relationship_clean(entity_id s_id, component_type s_type) {
 }
 
 static inline void component_free(component_t * c) {
+    // BACKHERE
     relationship_clean(c->ent_i, c->type);
 	manager_t * const mgr = managers[c->type-CPT_FIRST];
+	if (mgr->cpt_destroy) {mgr->cpt_destroy(c);}
 	NEDTRIE_REMOVE(component_container_s, &mgr->components, c);
 	free(c);
 }
@@ -69,7 +71,7 @@ void inline entity_free(entity_t * ent) {
 
 // Public:
 
-#include "bear.h"
+#include "game.h"
 
 entity_id entity_create() {
     // FIXME: This section stops working with -Olevel
@@ -113,8 +115,6 @@ void * component_attach(entity_id ent_i, component_type cpt_t) {
 void component_remove(void * cptv) {
 	component_t * const cpt = cptv;
 	if (!cpt) {return;}
-	manager_t * const mgr = managers[cpt->type - CPT_FIRST];
-	if (mgr->cpt_destroy) {mgr->cpt_destroy(cpt);}
 	component_free(cpt);
 }
 
@@ -201,6 +201,30 @@ relationship_t * relationship_related(entity_id parent_id, int parent_type, enti
     return 0; // No result
 }
 
+void entity_add(entity_l * h, entity_id el) {
+    entity_l const n = *h;
+    entity_l const p = n?n->p:0;
+
+    entity_l nw = malloc(sizeof(*nw));
+    nw->el = el;
+    nw->p = p;
+    nw->n = n;
+    *h = nw;
+    if (n) {n->p = nw;}
+    if (p) {p->n = nw;}
+}
+
+void entity_del(entity_l * h) {
+    entity_l const c = *h;
+    entity_l const p = c->p;
+    entity_l const n = c->n;
+
+    if (n) {n->p = p;}
+    if (p) {p->n = n;}
+    free(c);
+    *h = p?p:n;
+}
+
 void entity_init() {
     NEDTRIE_INIT(&entities);
 	NEDTRIE_INIT(&bychild_index);
@@ -211,10 +235,16 @@ void entity_init() {
 managers[(man).type-CPT_FIRST] = &(man); \
 NEDTRIE_INIT(&managers[(man).type-CPT_FIRST]->components);
 
-	// Add new managers here.
-	MANAGER(cpt_name);
-	MANAGER(cpt_hair);
-	MANAGER(cpt_colour);
+    // Generics
+    MANAGER(cpt_name);
+    MANAGER(cpt_pos);
+    MANAGER(cpt_symbol);
+
+    // Creature components
+    MANAGER(cpt_part);
+    MANAGER(cpt_soul);
+    MANAGER(cpt_body);
+    MANAGER(cpt_creature);
 
 #undef MANAGER
 

@@ -28,12 +28,11 @@ static int move_player(void * ctx) {
 		case KEY_DOWN:  v = 7; break;
 		case KEY_C3:    v = 8; break;
 	}
-	game_d.player.pos.x += m[v].x;
-	game_d.player.pos.y += m[v].y;
-	const tile_t* t = map_get_tile(game_d.map, game_d.player.pos.x, game_d.player.pos.y);
-	if (!BIT_ISSET(t->flags, TILE_WALKABLE) || BIT_ISSET(t->flags, TILE_OCCUPIED)) {
-		game_d.player.pos.x -= m[v].x;
-		game_d.player.pos.y -= m[v].y;
+    pos_t * const p = component_get(game_d.player, CPT_POS); assert(p);
+	const tile_t* t = map_get_tile(game_d.map, p->pos.x + m[v].x, p->pos.y + m[v].y);
+	if (BIT_ISSET(t->flags, TILE_WALKABLE) && !BIT_ISSET(t->flags, TILE_OCCUPIED)) {
+		p->pos.x += m[v].x;
+		p->pos.y += m[v].y;
 	}
 	return 0;
 }
@@ -41,7 +40,10 @@ static int move_player(void * ctx) {
 static int toggle_view(void * ctx) {game_d.view++; return 0;}
 static int toggle_fov_debug(void * ctx) {
 	game_d.fov.mode = !game_d.fov.mode;
-	game_d.fov.k = game_d.player.pos;
+    {
+        pos_t * const p = component_get(game_d.player, CPT_POS); assert(p);
+        game_d.fov.k = p->pos;
+    }
 	game_d.fov.v = 0;
 	return 0;
 }

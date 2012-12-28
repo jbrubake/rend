@@ -14,12 +14,12 @@ static const coord_t where[] = {
 
 static int gobbo_move(void* event) {
 	event_rest_t * const ev = event;
-	creature_t * const g = ev->creature;
+    pos_t * const pos = component_get(ev->creature, CPT_POS); assert(pos);
 	const coord_t * const w = where + kiss_rand()%8;
-	tile_t* t = map_get_tile(game_d.map, g->pos.x + w->x, g->pos.y + w->y);
+	tile_t* t = map_get_tile(game_d.map, pos->pos.x + w->x, pos->pos.y + w->y);
 	if ( t && !BIT_ISSET(t->flags, TILE_OCCUPIED) && BIT_ISSET(t->flags, TILE_WALKABLE) ) {
-		g->pos.x += w->x;
-		g->pos.y += w->y;
+		pos->pos.x += w->x;
+		pos->pos.y += w->y;
 	}
 
 	ref_copy(ev); // Make sure the event is not deleted.
@@ -46,7 +46,10 @@ static int player_move(void* event) {
 	ev->priority = game_d.time + 25; // Renew
 	heap_push(&game_d.pqueue, ev);
 	char buffer[56];
-	snprintf(buffer, sizeof(buffer), "Player moved to: %d %d", game_d.player.pos.x, game_d.player.pos.y);
+    {
+        pos_t * const p = component_get(game_d.player, CPT_POS); assert(p);
+        snprintf(buffer, sizeof(buffer), "Player moved to: %d %d", p->pos.x, p->pos.y);
+    }
 	iface_printline(buffer);
 	return 0;
 }

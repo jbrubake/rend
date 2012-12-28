@@ -4,11 +4,15 @@
 typedef struct coord_t {int x; int y;} coord_t;
 
 #include "containers.h"
+#include "nedtrie.h"
+#include "entities.h"
 #include "types.h"
 #include "map.h"
 #include "interface.h"
 #include "fov.h"
 #include "kiss.h"
+
+#include "generic.h"
 #include "creature.h"
 
 #include "debug.h"
@@ -27,7 +31,7 @@ typedef struct event_t {
 
 typedef struct event_rest_t {
 	event_t event;
-	creature_t *creature;
+	entity_id creature;
 } event_rest_t;
 
 // Global game data
@@ -39,13 +43,12 @@ struct game_t {
 		coord_t k;
 		uint v;
 	} fov;
-	struct {
-		// This is where the "debug" variables and such go.
-		template_t humanoid;
+	struct {// Temporary stuff for the alpha
+		entity_id humanoid;
 	} transient;
 	heap_t  pqueue;
-	reflist_t goblins;
-	creature_t player;
+	entity_l goblins;
+	entity_id player;
 	map_t *map;
 	iface_t iface;
 } game_d;

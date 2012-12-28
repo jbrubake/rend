@@ -1,11 +1,9 @@
+#include "game.h"
+
 #ifndef _ENTITIES_H_
 #define _ENTITIES_H_
 
 // Component manager:
-
-#include "types.h"
-#include "nedtrie.h"
-#include "containers.h"
 
 typedef uint entity_id, component_id;
 typedef uchar component_type;
@@ -14,10 +12,15 @@ enum /* Component types */ {
 	CPT_ENTITY,
 	CPT_FIRST,
     CPT_NAME = CPT_FIRST,
-    CPT_HAIR,
-    CPT_COLOUR,
-    CPT_END,
-	CPT_NUM = CPT_END - CPT_FIRST
+    CPT_POS,
+    CPT_SYMBOL,
+    CPT_PART,
+    CPT_SOUL,
+    CPT_BODY,
+    CPT_CREATURE,
+    CPT_GENERIC_END,
+    CPT_END = CPT_GENERIC_END,
+	CPT_NUM = CPT_END - CPT_FIRST,
 	// The number of component types that there are.
 };
 
@@ -110,5 +113,32 @@ relationship_iter relationship_findchildren(entity_id parent_id, int parent_type
 relationship_iter relationship_findparents (entity_id child_id,  int child_type,  int parent_type);
 relationship_t *  relationship_next(relationship_iter* ri);
 relationship_t *  relationship_related(entity_id parent_id, int parent_type, entity_id child_id, int child_type);
+
+/* Entity lists. Use as follows:
+    entity_l list = 0; // An empty list.
+    entity_add(&list, 12); // Adds entity 12 to the list.
+    entity_l iterator = list; // Lists and interators are the same type.
+    while (iterator) {
+        do_something(iterator->el); // Manipulate the entity element
+        iterator = iterator->n;     // Go to the next entity in the list
+    }
+    ...
+    // Remove an element at iterator position (makes sure to remove the first node of the parent list in case of deleting the first node).
+    entity_delsafe(list, iterator);
+    ...
+    // Free the list
+    while(list) {entity_del(&list);}
+*/
+
+typedef struct entity_l {
+    entity_id el;
+    struct entity_l * n;
+    struct entity_l * p;
+} *entity_l;
+
+void     entity_add(entity_l * h, entity_id el);
+void     entity_del(entity_l * h);
+#define  entity_delsafe(li, it) entity_del( (it == li) ? (it = li->n), &li : &it );
+entity_l entity_lcopy(entity_l * h);
 
 #endif

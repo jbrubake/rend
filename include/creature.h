@@ -10,31 +10,33 @@ typedef struct fraction_t {
 #define FRACT(x, y) (struct fraction_t){x, y}
 
 typedef struct part_t {
-	ref_t ref;            // For ref-counting
-	const char* name;     // The name of the part. "Heart" for example.
+	component_t base;     // The base component.
+
 	fraction_t vitality;  // The current health of the part.
 
-	// Could be bitfields. Currently, there is no point (would take a word anyways).
+	// Could be bitfields.
 	u8 necessary;         // There are currently no health dependencies. Instead, a body dies when a necessary part is destroyed.
 	u8 importance;        // Display this part in body part lists, even if not wounded (0 = yes, 1 = only when wounded, >=2 only in advanced mode)
 	u8 pain;
 	u8 size;              // A weigth for the probability that a successful attack strikes this target.
 	u16 bleeds;           // How fast does this part bleed?
 
-	reflist_t children;   // Any associated children in the skeleton.
-	reflist_t organs;     // Any organs found internal to the part.
+	entity_l children;    // Any associated children in the skeleton.
+	entity_l organs;      // Any organs found internal to the part.
 } part_t;
 
 typedef struct soul_t {
+    component_t base;
+
 	u8 intelligence;
 	u8 will;
 	u8 charisma;
 } soul_t;
 
 typedef struct body_t {
-	ref_t ref;
-	part_t* rootpart;
+    component_t base;
 
+    entity_id rootpart;
 	u8 strength;
 	u8 endurance;
 	u8 agility;
@@ -43,22 +45,18 @@ typedef body_t template_t;
 
 typedef struct creature_t
 {
-	ref_t ref;
-	uint type;
-
-	// Should these be separate? Do ghosts still have bodies?
-	coord_t pos;
-	u8 symbol;
-	u8 color;
+    component_t base;
 
 	// Dynamic attributes
 	fraction_t guard;
 	fraction_t concentration;
 	fraction_t stamina;
-
-	body_t *body;
-//	soul_t *soul;
 } creature_t;
+
+extern manager_t cpt_part;
+extern manager_t cpt_soul;
+extern manager_t cpt_body;
+extern manager_t cpt_creature;
 
 enum {
 	CREATURE_HUMAN,
@@ -66,13 +64,12 @@ enum {
 };
 
 // Create a ref_t counted body from a template.
-body_t * body_from_template(template_t * t);
-void body_clean(body_t *b);
+void body_from_template(body_t * b, entity_id t);
 
 // Some very temporary functions.
 void creature_test_init();
 void creature_test_cleanup();
-creature_t *humanoid_generator(coord_t p, int priority);
-void creature_destroyer(creature_t *c);
+// FIXME: Should this be static?
+creature_t *humanoid_generator(const char * name, coord_t p, int priority);
 
 #endif

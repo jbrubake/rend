@@ -75,9 +75,7 @@ void iface_init(void) {
 }
 
 // This is a full screen window. It should use the full screen!
-void iface_health_pane() {
-	clear();
-}
+void iface_health_pane() {clear();}
 
 #define COORD2INDEX(x, y, xmax) ((x) + (xmax) * (y))
 void iface_map_pane(map_t* m) {
@@ -90,19 +88,23 @@ void iface_map_pane(map_t* m) {
 			mvwaddch(win, j, i, t->symbol == '.' && (!BIT_ISSET(t->flags, TILE_VISIBLE)) ? ' ' : t->symbol | COLOR_PAIR(t->color) | (A_BOLD * BIT_ISSET(t->flags, TILE_VISIBLE)));
 		}
 	}
-	const coord_t* pc = &game_d.player.pos;
-	mvwaddch(win, pc->y, pc->x, '@' | A_BOLD);
-	if (game_d.fov.mode) {
+    { // Add the player's symbol to the map.
+        pos_t * const pos = component_get(game_d.player, CPT_POS); assert(pos);
+        const coord_t* pc = &pos->pos;
+         // FIXME: Should be a symbol component
+        mvwaddch(win, pc->y, pc->x, '@' | A_BOLD);
+    }
+	if (game_d.fov.mode) { // Add the FOV cursor if applicable
 		t = map_get_tile(game_d.map, game_d.fov.k.x, game_d.fov.k.y);
 		if (!t) {return;}
 		mvwaddch(win, game_d.fov.k.y, game_d.fov.k.x, '%' | COLOR_PAIR(t->color) | A_BOLD);
 	}
-	reflist_node_t *g = game_d.goblins.f;
-	while (g) {
-		creature_t* const creature = g->data;
-		t = map_get_tile(game_d.map, creature->pos.x, creature->pos.y);
-		if (!t) {g = g->n; continue;}
-		if (BIT_ISSET(t->flags, TILE_VISIBLE)) {mvwaddch(win, creature->pos.y, creature->pos.x, creature->symbol | COLOR_PAIR(creature->color));}
+    entity_l g = game_d.goblins;
+	while (g) { // Add goblin symbols.
+		pos_t    * const pos = component_get(g->el, CPT_POS); assert(pos);
+        symbol_t * const sym = component_get(g->el, CPT_SYMBOL); assert(sym);
+		t = map_get_tile(game_d.map, pos->pos.x, pos->pos.y);
+		if (t && BIT_ISSET(t->flags, TILE_VISIBLE)) {mvwaddch(win, pos->pos.y, pos->pos.x, sym->symbol | COLOR_PAIR(sym->color));}
 		g = g->n;
 	}
 }

@@ -35,17 +35,18 @@ static keyhashnode_t keynodes[] = {
 static void calc_occupancy() {
 	map_t* const m = game_d.map;
 	int i; for (i=0; i<m->size[0]*m->size[1]; i++) {BIT_UNSET(m->tiles[i].flags, TILE_OCCUPIED);}
-	reflist_node_t *gn = game_d.goblins.f;
 	tile_t *t;
+	entity_l gn = game_d.goblins;
 	while (gn) {
-		const creature_t* const g = gn->data;
-		t = map_get_tile(m, g->pos.x, g->pos.y);
+		const pos_t* const gpos = component_get(gn->el, CPT_POS); assert(gpos);
+		t = map_get_tile(m, gpos->pos.x, gpos->pos.y);
 		if (t) {
 			BIT_SET(t->flags, TILE_OCCUPIED);
 		}
 		gn = gn->n;
 	}
-	t = map_get_tile(m, game_d.player.pos.x, game_d.player.pos.y);
+    const pos_t * const ppos = component_get(game_d.player, CPT_POS); assert(ppos);
+	t = map_get_tile(m, ppos->pos.x, ppos->pos.y);
 	if (t) {
 		BIT_SET(t->flags, TILE_OCCUPIED);
 	}
@@ -58,15 +59,29 @@ static int priority_cmp(void* x, void* y) {
 
 int game_init() {
 	kiss_seed(0);
+
+    // Initialize the interface subsystem.
 	iface_init();
+
+    // Initialize the entity and component manager.
+    entity_init();
+
 	uint i; for (i=0; i<sizeof(keynodes)/sizeof(*keynodes); i++) {
 		key_add(keynodes + i);
 	}
 	game_d.map = map_init(65, 20);
-	game_d.player.pos = (coord_t){1,1};
+    {
+        game_d.player = entity_create();
+        pos_t * const p = component_attach(game_d.player, CPT_POS);
+        p->pos = (coord_t){1,1};
+        name_t * const nm = component_attach(game_d.player, CPT_NAME);
+        strncpy(nm->str, "Player", NAME_SIZE);
+
+        // FIXME: Player setup somewhat lacking...
+    }
 
 	game_d.pqueue = heap_init(priority_cmp);
-	game_d.goblins = reflist_init();
+	game_d.goblins = 0;
 
 	{
 		event_t *ev = ref_alloc(sizeof(*ev));
@@ -75,16 +90,20 @@ int game_init() {
 		heap_push(&game_d.pqueue, ev);
 	}
 
-	humanoid_generator((coord_t){ 6,  6}, 50);
-	humanoid_generator((coord_t){ 6, 11},100);
-	humanoid_generator((coord_t){11,  6},150);
-	humanoid_generator((coord_t){11, 11},200);
+	creature_test_init();
+
+	humanoid_generator("Goblin", (coord_t){ 6,  6}, 50);
+	humanoid_generator("Goblin", (coord_t){ 6, 11},100);
+	humanoid_generator("Goblin", (coord_t){11,  6},150);
+	humanoid_generator("Goblin", (coord_t){11, 11},200);
+
 	return 0;
 }
 
 int game_loop() {
 	while (1) {
-		fov_calc(game_d.map, game_d.player.pos, 6);
+        const pos_t * const p = component_get(game_d.player, CPT_POS); assert(p);
+		fov_calc(game_d.map, p->pos, 6);
 		calc_occupancy();
 		iface_trace_pane();
 		iface_info_pane();
@@ -102,16 +121,22 @@ int game_loop() {
 void game_clean() {
 	iface_cleanup();
 	map_clean(game_d.map);
+
 	// Clean the event queue
 	void* x;
 	while (game_d.pqueue.root) {
 		x = heap_pop(&game_d.pqueue);
 		ref_free(x);
 	}
+
 	// Clean the goblin list
-	reflist_node_t* n = game_d.goblins.f;
+	entity_l n = game_d.goblins;
 	while (n) {
-		creature_destroyer(n->data);
-		reflist_remove(&n);
+		entity_destroy(n->el);
+		entity_del(&n);
 	}
+
+    // Delete all entities
+    creature_test_cleanup();
+    entity_cleanall();
 }

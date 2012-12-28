@@ -21,8 +21,8 @@ void outfunc(int x) {
 void* int_cpy(void * x) {int* y = malloc(sizeof(*y)); *y = *(int*)x; return y;}
 int main() {
 	mwInit();
-	mwSetAriFunc(arifunc);
-	mwSetOutFunc(outfunc);
+//	mwSetAriFunc(arifunc);
+//	mwSetOutFunc(outfunc);
 /*
 	creature_test_init();
 	creature_t *gobby = humanoid_generator((coord_t){0, 0}, 1);
@@ -30,7 +30,6 @@ int main() {
 	creature_test_cleanup();
 */
 
-	creature_test_init();
 	game_init();
 	iface_setup();
 	game_loop();
