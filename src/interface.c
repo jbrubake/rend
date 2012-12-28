@@ -113,8 +113,24 @@ void iface_map_pane(map_t* m) {
 void iface_info_pane(void) {
 	WINDOW * const win = game_d.iface.win_creature;
 
-	mvwprintw(win, 1, 1, "Character");
-	mvwprintw(win, 2, 1, "information");
+    const char bar[] = "[            ]";
+    char bbuf[sizeof(bar)];
+    int i; int t;
+
+    name_t     * const nm = component_get(game_d.player, CPT_NAME); assert(nm);
+    creature_t * const c  = component_get(game_d.player, CPT_CREATURE); assert(c);
+	mvwprintw(win, 1, 1, "%s", nm->str);
+    mvwprintw(win, 3, 1, "Guard:");
+
+    memset(bbuf, ' ', sizeof(bar));
+    snprintf(bbuf, sizeof(bar), "[%d/%d (%2d%%)]", c->guard.f[0], c->guard.f[1], c->guard.f[0]*100/c->guard.f[1]);
+    bbuf[sizeof(bar)-2] = ']'; bbuf[sizeof(bar)-1] = '\0';
+    t = c->guard.f[0]*strlen(bbuf)/c->guard.f[1];
+    for (i=0; bbuf[i]; i++) {
+        mvwaddch(win, 4, 1+i, bbuf[i] | 
+            COLOR_PAIR( (i < t) ? iface_color(COLOR_WHITE, COLOR_GREEN) : iface_color(COLOR_WHITE, COLOR_BLACK) )
+        );
+    }
 }
 
 void iface_trace_pane(void) {

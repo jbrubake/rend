@@ -3,11 +3,14 @@
 #ifndef _CREATURE_H_
 #define _CREATURE_H_
 
-typedef struct fraction_t {
-	int v;
-	int max;
+typedef union fraction_t {
+    struct {
+        int v;
+        int max;
+    };
+    int f[2];
 } fraction_t;
-#define FRACT(x, y) (struct fraction_t){x, y}
+#define FRACT(x, y) (fraction_t){.f = {x, y}}
 
 typedef struct part_t {
 	component_t base;     // The base component.

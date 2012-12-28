@@ -72,10 +72,17 @@ int game_init() {
 	game_d.map = map_init(65, 20);
     {
         game_d.player = entity_create();
+
         pos_t * const p = component_attach(game_d.player, CPT_POS);
         p->pos = (coord_t){1,1};
+
         name_t * const nm = component_attach(game_d.player, CPT_NAME);
         strncpy(nm->str, "Player", NAME_SIZE);
+
+        creature_t * const cr = component_attach(game_d.player, CPT_CREATURE);
+        cr->concentration     = FRACT(10, 10);
+        cr->stamina           = FRACT(10, 10);
+        cr->guard             = FRACT(2, 10);
 
         // FIXME: Player setup somewhat lacking...
     }

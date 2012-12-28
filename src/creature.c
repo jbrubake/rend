@@ -35,13 +35,13 @@ enum {
 };
 
 static inline void print_fraction(fraction_t frac) {
-	printf("%d/%d\n", frac.v, frac.max);
+	printf("%d/%d\n", frac.f[0], frac.f[1]);
 }
 
 static void print_part(entity_id part) {
     name_t* const n = component_get(part, CPT_NAME); assert(n);
     part_t* const p = component_get(part, CPT_PART); assert(p);
-	printf("%s: (%d/%d) [", n->str, p->vitality.v, p->vitality.max);
+	printf("%s: (%d/%d) [", n->str, p->vitality.f[0], p->vitality.f[1]);
 	int k=0;
 	if (p->necessary)   {printf(k?" %s":"%s",               "necessary"); k++;}
 	if (!p->importance) {printf(k?" %s":"%s",               "important"); k++;}
@@ -164,7 +164,7 @@ void creature_test_init() {
     int i;
     for (i=0; i<PART_NUM; i++) {parts[i] = entity_create();}
 
-#define PART(part, name, health, ...) part_create(parts[part], name, (fraction_t){health, health}, __VA_ARGS__)
+#define PART(part, name, health, ...) part_create(parts[part], name, FRACT(health, health), __VA_ARGS__)
 #define CONNECTED(parent, child) part_relate(0, parts[parent], parts[child])
 #define CONTAINS(parent, child) part_relate(1, parts[parent], parts[child])
 
