@@ -34,6 +34,16 @@ enum {
     PART_NUM
 };
 
+void creature_getwounds(entity_id e, entity_l * li) {
+    if (!e) {return;}
+    part_t * const p = component_get(e, CPT_PART); assert(p);
+
+    if (p->vitality.f[0] != p->vitality.f[1]) {entity_add(li, e);}
+    entity_l it;
+    for (it = p->organs; it; it = it->n) {creature_getwounds(it->el, li);}
+    for (it = p->children; it; it = it->n) {creature_getwounds(it->el, li);}
+}
+
 static inline void print_fraction(fraction_t frac) {
 	printf("%d/%d\n", frac.f[0], frac.f[1]);
 }
@@ -179,7 +189,8 @@ void creature_test_init() {
 	PART(PART_LEFTARM,    "Left Arm",     24, 0, 0,  8, 6,  12);
 	PART(PART_RIGHTARM,   "Right Arm",    24, 0, 0,  8, 6,  12);
 	PART(PART_LEFTHAND,   "Left Hand",     8, 0, 0,  8, 2,   6);
-	PART(PART_RIGHTHAND,  "Right Hand",    8, 0, 0,  8, 2,   6);
+//	PART(PART_RIGHTHAND,  "Right Hand",    8, 0, 0,  8, 2,   6);
+    part_create(parts[PART_RIGHTHAND], "Right Hand", FRACT(-1, 8), 0, 0,  8, 2,   6);
 
 	PART(PART_SKULL,      "Skull",        12, 0, 1, 16,  0,  4);
 	PART(PART_UPPERSPINE, "Upper Spine",   8, 0, 1, 12,  0,  4);

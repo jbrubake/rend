@@ -1,5 +1,7 @@
 #include "game.h"
 
+// Window management
+
 static WINDOW *create_newwin(int height, int width, int starty, int startx)
 {	WINDOW *local_win;
 
@@ -34,6 +36,51 @@ static void destroy_win(WINDOW *local_win)
 	delwin(local_win);
 }
 
+// Interface widgets and helpers
+
+// Collect a list of wounds.
+static void iface_wounds() {
+    body_t * const b = component_get(game_d.player, CPT_BODY);
+    if (!b) {return;} // The player has no body. Display nothing.
+    assert(b->rootpart);
+
+    entity_l li = 0;
+    creature_getwounds(b->rootpart, &li);
+    mvwaddstr(game_d.iface.win_creature, 10, 1, "Wounds:");
+    int i = 0;
+    WINDOW * const win = game_d.iface.win_creature;
+    int base_c = iface_color(COLOR_WHITE, COLOR_BLACK);
+    int gone_c = iface_color(COLOR_BLACK, COLOR_WHITE);
+    int bad_c  = iface_color(COLOR_RED, COLOR_BLACK);
+    int hurt_c  = iface_color(COLOR_YELLOW, COLOR_BLACK);
+    while (li) {
+        name_t * const nm = component_get(li->el, CPT_NAME); assert(nm);
+        part_t * const p = component_get(li->el, CPT_PART); assert(p);
+        wcolor_set(win, 
+                   p->vitality.f[0] <= 0 ? gone_c :
+                        (p->vitality.f[0]*2/p->vitality.f[1] ? hurt_c : bad_c),
+                   0);
+        mvwaddstr(win, 11+i, 1, nm->str);
+        wcolor_set(win, base_c, 0);
+        entity_del(&li); i++;
+    }
+}
+
+// Print a "health" type bar with text.
+void iface_hbar(WINDOW * const win, int y, int x, fraction_t f, int col) {
+    char buf[MAP_SIZEY];
+    memset(buf, 0, sizeof(buf));
+    snprintf(buf, sizeof(buf), "[%d/%d (%d%%)]", f.f[0], f.f[1], f.f[0]*100/f.f[1]);
+    int t = f.f[0]*strlen(buf)/f.f[1];
+    int i;
+    for (i=0; buf[i]; i++) {
+        mvwaddch(win, y, x+i, buf[i] | 
+            COLOR_PAIR( (i < t) ? iface_color(COLOR_WHITE, col) : iface_color(COLOR_WHITE, COLOR_BLACK) )
+        );
+    }
+}
+
+// Print a line of text.
 void iface_printline(const char * str) {
 	iface_t * const iface = &game_d.iface;
 	size_t bsize = strlen(str);
@@ -109,28 +156,21 @@ void iface_map_pane(map_t* m) {
 	}
 }
 
-
 void iface_info_pane(void) {
 	WINDOW * const win = game_d.iface.win_creature;
-
-    const char bar[] = "[            ]";
-    char bbuf[sizeof(bar)];
-    int i; int t;
 
     name_t     * const nm = component_get(game_d.player, CPT_NAME); assert(nm);
     creature_t * const c  = component_get(game_d.player, CPT_CREATURE); assert(c);
 	mvwprintw(win, 1, 1, "%s", nm->str);
-    mvwprintw(win, 3, 1, "Guard:");
 
-    memset(bbuf, ' ', sizeof(bar));
-    snprintf(bbuf, sizeof(bar), "[%d/%d (%2d%%)]", c->guard.f[0], c->guard.f[1], c->guard.f[0]*100/c->guard.f[1]);
-    bbuf[sizeof(bar)-2] = ']'; bbuf[sizeof(bar)-1] = '\0';
-    t = c->guard.f[0]*strlen(bbuf)/c->guard.f[1];
-    for (i=0; bbuf[i]; i++) {
-        mvwaddch(win, 4, 1+i, bbuf[i] | 
-            COLOR_PAIR( (i < t) ? iface_color(COLOR_WHITE, COLOR_GREEN) : iface_color(COLOR_WHITE, COLOR_BLACK) )
-        );
-    }
+    mvwprintw    (win, 3, 1, "Guard:");
+    iface_hbar   (win, 4, 1, c->guard, COLOR_RED);
+    mvwprintw    (win, 5, 1, "Stamina:");
+    iface_hbar   (win, 6, 1, c->stamina, COLOR_GREEN);
+    mvwprintw    (win, 7, 1, "Concentration:");
+    iface_hbar   (win, 8, 1, c->concentration, COLOR_BLUE);
+
+    iface_wounds ();
 }
 
 void iface_trace_pane(void) {
@@ -171,8 +211,8 @@ int iface_next_key (void) {
 }
 
 void iface_setup(void) {
-	resize_term(25, 80);
-	game_d.iface.win_trace    = create_newwin( 5, 80, 20,  0);
-	game_d.iface.win_creature = create_newwin(20, 15,  0, 65);
-	game_d.iface.win_main     = create_newwin(20, 65,  0,  0);
+	resize_term(WINDOW_SIZEY, WINDOW_SIZEX);
+	game_d.iface.win_trace    = create_newwin(WINDOW_SIZEY - MAP_SIZEY, WINDOW_SIZEX, MAP_SIZEY,  0);
+	game_d.iface.win_creature = create_newwin(MAP_SIZEY, MAP_SIZEY,  0, MAP_SIZEX);
+	game_d.iface.win_main     = create_newwin(MAP_SIZEY, MAP_SIZEX,  0,  0);
 }

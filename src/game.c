@@ -69,7 +69,18 @@ int game_init() {
 	uint i; for (i=0; i<sizeof(keynodes)/sizeof(*keynodes); i++) {
 		key_add(keynodes + i);
 	}
-	game_d.map = map_init(65, 20);
+	game_d.map = map_init(MAP_SIZEX, MAP_SIZEY);
+
+	game_d.pqueue = heap_init(priority_cmp);
+	game_d.goblins = 0;
+
+	creature_test_init();
+
+	humanoid_generator("Goblin", (coord_t){ 6,  6}, 50);
+	humanoid_generator("Goblin", (coord_t){ 6, 11},100);
+	humanoid_generator("Goblin", (coord_t){11,  6},150);
+	humanoid_generator("Goblin", (coord_t){11, 11},200);
+
     {
         game_d.player = entity_create();
 
@@ -79,31 +90,22 @@ int game_init() {
         name_t * const nm = component_attach(game_d.player, CPT_NAME);
         strncpy(nm->str, "Player", NAME_SIZE);
 
+        body_t * const b = component_attach(game_d.player, CPT_BODY);
+        body_from_template(b, game_d.transient.humanoid);
+
         creature_t * const cr = component_attach(game_d.player, CPT_CREATURE);
-        cr->concentration     = FRACT(10, 10);
+        cr->guard             = FRACT(10, 10);
         cr->stamina           = FRACT(10, 10);
-        cr->guard             = FRACT(2, 10);
+        cr->concentration     = FRACT(10, 10);
 
         // FIXME: Player setup somewhat lacking...
     }
-
-	game_d.pqueue = heap_init(priority_cmp);
-	game_d.goblins = 0;
-
 	{
 		event_t *ev = ref_alloc(sizeof(*ev));
 		ev->type = PLAYER_REST;
 		ev->priority = 25;
 		heap_push(&game_d.pqueue, ev);
 	}
-
-	creature_test_init();
-
-	humanoid_generator("Goblin", (coord_t){ 6,  6}, 50);
-	humanoid_generator("Goblin", (coord_t){ 6, 11},100);
-	humanoid_generator("Goblin", (coord_t){11,  6},150);
-	humanoid_generator("Goblin", (coord_t){11, 11},200);
-
 	return 0;
 }
 

@@ -61,7 +61,6 @@ static inline void component_free(component_t * c) {
 static void _component_free(void * c) {component_free(c);}
 
 void inline entity_free(entity_t * ent) {
-// WORKING
     relationship_clean(ent->ent_i, CPT_ENTITY);
 	link_clean(&ent->components, _component_free); // Remove entity components.
     NEDTRIE_REMOVE(entity_container_s, &entities, ent); // Remove the entity.

@@ -2,6 +2,14 @@
 #define _GAME_H_
 
 typedef struct coord_t {int x; int y;} coord_t;
+typedef union fraction_t {
+    struct {
+        int v;
+        int max;
+    };
+    int f[2];
+} fraction_t;
+#define FRACT(x, y) (fraction_t){.f = {x, y}}
 
 #include "containers.h"
 #include "nedtrie.h"

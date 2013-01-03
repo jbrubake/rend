@@ -3,15 +3,6 @@
 #ifndef _CREATURE_H_
 #define _CREATURE_H_
 
-typedef union fraction_t {
-    struct {
-        int v;
-        int max;
-    };
-    int f[2];
-} fraction_t;
-#define FRACT(x, y) (fraction_t){.f = {x, y}}
-
 typedef struct part_t {
 	component_t base;     // The base component.
 
@@ -74,5 +65,8 @@ void creature_test_init();
 void creature_test_cleanup();
 // FIXME: Should this be static?
 creature_t *humanoid_generator(const char * name, coord_t p, int priority);
+
+// For listing the wounded parts on a creature.
+void creature_getwounds(entity_id e, entity_l * li);
 
 #endif
