@@ -44,6 +44,97 @@ void creature_getwounds(entity_id e, entity_l * li) {
     for (it = p->children; it; it = it->n) {creature_getwounds(it->el, li);}
 }
 
+static entity_id creature_hit_by_size(entity_id e, int* it) {
+    part_t * const p = component_get(e, CPT_PART); assert(p);
+    *it -= p->size;
+    if (*it < 0) {return e;}
+    entity_l li; entity_id r;
+    for (li=p->children; li; li = li->n) {
+        if ( (r=creature_hit_by_size(li->el, it)) ) {return r;}
+    }
+    return 0; // No entity hit
+}
+static int creature_totalsize_h(entity_id e) {
+    part_t * const p = component_get(e, CPT_PART); assert(p);
+    int s; entity_l li;
+    for (s=0, li=p->children; li; li = li->n) {
+        s += creature_totalsize_h(li->el);
+    }
+    return p->size + s;
+}
+int creature_totalsize(entity_id e) {
+    body_t * const b = component_get(e, CPT_BODY); assert(b);
+    assert(b->rootpart);
+    return creature_totalsize_h(b->rootpart);
+}
+
+void creature_hit(entity_id attacker, entity_id defender) {
+    body_t * const ab = component_get(attacker, CPT_BODY);
+    body_t * const db = component_get(defender, CPT_BODY);
+    creature_t * const dc = component_get(defender, CPT_CREATURE); assert(dc);
+
+    int a_str = ab?ab->strength:0;  // Attacker strength modifier
+    int a_agl = ab?ab->agility:0;   // Attacker agility modifier
+
+    int d_end = db?db->endurance:0; // Defender endurance modifier
+    int d_agl = db?db->agility:0;   // Defender agility modifier
+
+    // The hit part
+    {
+        int attack = a_agl - d_agl + kiss_dX(a_agl); // Roll attack dice. There's always a chance to hit, decreasing with defender agility.
+        if ( !( attack > 0 || (attack = 1, !kiss_dX(d_agl)) ) )
+        {
+            // The attack missed.
+            iface_printline("Attack missed.");
+            return;
+        }
+
+        // Subtract from d_g.
+        dc->guard.f[0] -= attack; if (dc->guard.f[0] < 0) {dc->guard.f[0] = 0;}
+
+        // (d_g/d_gmax)^3 is now the probability of a good hit.
+        float prob_hit = (float)dc->guard.f[0]/(float)dc->guard.f[1];
+        float random_hit = (float)kiss_dX(1000)/1000.0f;
+        prob_hit = prob_hit*prob_hit*prob_hit;
+        if (random_hit <= prob_hit) {
+            // The attack was protected by the enemy's guard.
+            iface_printline("Attack hit, deflected.");
+            return;
+        }
+    }
+
+    if (!db) {
+        // Handle cases of creatures without bodies that may yet be hit.
+        iface_printline("Creature has no body.");
+        return;
+    }
+
+    entity_id hit;
+    {
+        int total_size = creature_totalsize(defender);
+        int pi = kiss_dX(total_size);
+        hit = creature_hit_by_size(db->rootpart, &pi);
+        assert(hit); // Must hit something, unless the body is empty.
+        // If that starts being a thing, deal with it.
+    }
+
+    // Deal some damage. YEEEEAAAAGGGHHH!
+    {
+        part_t * const part_p = component_get(hit, CPT_PART); assert(part_p);
+
+        int damage = (a_str - d_end + kiss_dX(a_str));
+        if (damage <= 0) {damage = 1;} // Do at least a bit of damage.
+        iface_printline("Damage done.");
+        part_p->vitality.f[0] -= damage;
+        if (part_p->vitality.f[0] < 0) {
+            part_p->vitality.f[0] = 0;
+            // TODO: Eventually, vitality.f[0] == 0 will trigger some code here, I would imagine.
+            iface_printline("Part destroyed!");
+            return;
+        }
+    }
+}
+
 static inline void print_fraction(fraction_t frac) {
 	printf("%d/%d\n", frac.f[0], frac.f[1]);
 }
@@ -189,8 +280,8 @@ void creature_test_init() {
 	PART(PART_LEFTARM,    "Left Arm",     24, 0, 0,  8, 6,  12);
 	PART(PART_RIGHTARM,   "Right Arm",    24, 0, 0,  8, 6,  12);
 	PART(PART_LEFTHAND,   "Left Hand",     8, 0, 0,  8, 2,   6);
-//	PART(PART_RIGHTHAND,  "Right Hand",    8, 0, 0,  8, 2,   6);
-    part_create(parts[PART_RIGHTHAND], "Right Hand", FRACT(-1, 8), 0, 0,  8, 2,   6);
+	PART(PART_RIGHTHAND,  "Right Hand",    8, 0, 0,  8, 2,   6);
+//    part_create(parts[PART_RIGHTHAND], "Right Hand", FRACT(2, 8), 0, 0,  8, 2,   6);
 
 	PART(PART_SKULL,      "Skull",        12, 0, 1, 16,  0,  4);
 	PART(PART_UPPERSPINE, "Upper Spine",   8, 0, 1, 12,  0,  4);
@@ -236,7 +327,7 @@ void creature_test_init() {
 	game_d.transient.humanoid = entity_create();
     body_t * const body = component_attach(game_d.transient.humanoid, CPT_BODY);
 	body->rootpart = parts[PART_HEAD];
-    body->strength = body->endurance = body->agility = 65;
+    body->strength = body->endurance = body->agility = 8;
 }
 
 void creature_test_cleanup() {entity_destroy(game_d.transient.humanoid);}

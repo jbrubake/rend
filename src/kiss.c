@@ -46,3 +46,16 @@ ulong kiss_rand() {
     kiss_carry = kiss_k >> 30;
     return kiss_x + kiss_y + kiss_w;
 }
+#include <stdio.h>
+int kiss_dX(int X) {
+    unsigned int r = 0; // r will be lg(v)
+    unsigned int x = X-1;
+    while (x >>= 1) // unroll for more speed...
+    {
+      r++;
+    }
+    r = 1<<(r+1);
+    int k = kiss_rand() % r;
+    while (k >= X) {k = kiss_rand() % r;}
+    return k;
+}

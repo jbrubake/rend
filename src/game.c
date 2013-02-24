@@ -29,6 +29,7 @@ static keyhashnode_t keynodes[] = {
 	KEY_DEF('w'         , move_fov_debug,   KTR('w')),
 	KEY_DEF('s'         , move_fov_debug,   KTR('s')),
 	KEY_DEF('z'         , nview_debug,      KTR('z')),
+    KEY_DEF('h'         , player_damage,    0),
 };
 
 //////////////////////////
@@ -58,7 +59,7 @@ static int priority_cmp(void* x, void* y) {
 }
 
 int game_init() {
-	kiss_seed(0);
+	kiss_seed(time(0));
 
     // Initialize the interface subsystem.
 	iface_init();

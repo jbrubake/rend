@@ -70,3 +70,7 @@ static int nview_debug(void * ctx) {
 	game_d.fov.v++;
 	return 0;
 }
+static int player_damage(void * x) {
+    creature_hit(game_d.player, game_d.player);
+    return 0;
+}

@@ -158,6 +158,7 @@ void iface_map_pane(map_t* m) {
 
 void iface_info_pane(void) {
 	WINDOW * const win = game_d.iface.win_creature;
+    wclear(win);
 
     name_t     * const nm = component_get(game_d.player, CPT_NAME); assert(nm);
     creature_t * const c  = component_get(game_d.player, CPT_CREATURE); assert(c);
@@ -177,7 +178,7 @@ void iface_trace_pane(void) {
 	WINDOW * const win = game_d.iface.win_trace;
 	int Xs, Ys;
 	getmaxyx(win, Ys, Xs);
-	werase(win);
+	wclear(win);
 	
 	link_iter_t iter = link_iter_last(&game_d.iface.log);
 	int i; for (i=0; i<Ys && iter.el; i++, link_prev(&iter))

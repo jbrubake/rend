@@ -11,6 +11,7 @@ typedef union fraction_t {
 } fraction_t;
 #define FRACT(x, y) (fraction_t){.f = {x, y}}
 
+#include <time.h>
 #include "containers.h"
 #include "nedtrie.h"
 #include "entities.h"

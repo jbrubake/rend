@@ -3,7 +3,6 @@
 #include <stdio.h>
 
 #include "game.h"
-#include "creature.h"
 
 // FIXME: Shouldn't be here
 int arifunc (const char * x) {
@@ -21,14 +20,8 @@ void outfunc(int x) {
 void* int_cpy(void * x) {int* y = malloc(sizeof(*y)); *y = *(int*)x; return y;}
 int main() {
 	mwInit();
-//	mwSetAriFunc(arifunc);
-//	mwSetOutFunc(outfunc);
-/*
-	creature_test_init();
-	creature_t *gobby = humanoid_generator((coord_t){0, 0}, 1);
-	creature_destroyer(gobby);
-	creature_test_cleanup();
-*/
+	mwSetAriFunc(arifunc);
+	mwSetOutFunc(outfunc);
 
 	game_init();
 	iface_setup();

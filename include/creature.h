@@ -67,6 +67,8 @@ void creature_test_cleanup();
 creature_t *humanoid_generator(const char * name, coord_t p, int priority);
 
 // For listing the wounded parts on a creature.
-void creature_getwounds(entity_id e, entity_l * li);
+void      creature_getwounds(entity_id e, entity_l * li);
+int       creature_totalsize(entity_id e);
+void      creature_hit      (entity_id attacker, entity_id defender);
 
 #endif
